@@ -1,0 +1,703 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>プリクラ</title>
+<style>
+:root{--pink:#ff5c9d;--deep:#d6457f;--ink:#3a2a33}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none}
+html,body{margin:0;height:100%;color:var(--ink);font-family:-apple-system,"Hiragino Maru Gothic ProN","Hiragino Sans",sans-serif;overflow:hidden;touch-action:manipulation;
+  background:linear-gradient(160deg,#ffe3f1 0%,#e8dcff 55%,#d7ecff 100%)}
+#bg{position:fixed;inset:0;overflow:hidden;pointer-events:none;z-index:0}
+#bg span{position:absolute;bottom:-12vh;opacity:0;animation:floatUp linear infinite}
+@keyframes floatUp{0%{transform:translateY(0) rotate(0);opacity:0}10%{opacity:.85}90%{opacity:.7}100%{transform:translateY(-118vh) rotate(50deg);opacity:0}}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.07)}}
+@keyframes pop{0%{transform:scale(.3);opacity:0}40%{transform:scale(1.18);opacity:1}100%{transform:scale(1);opacity:1}}
+@keyframes sparkle{0%{transform:translate(-50%,-50%) scale(.2) rotate(0);opacity:1}100%{transform:translate(-50%,-110%) scale(1.5) rotate(120deg);opacity:0}}
+@keyframes fall{0%{transform:translateY(-10vh) rotate(0);opacity:1}100%{transform:translateY(110vh) rotate(360deg);opacity:.9}}
+@keyframes shine{0%{background-position:0% 50%}100%{background-position:200% 50%}}
+.spark{position:fixed;z-index:50;font-size:28px;pointer-events:none;animation:sparkle .8s ease-out forwards}
+.conf{position:fixed;top:0;z-index:50;pointer-events:none;animation:fall linear forwards}
+.screen{display:none;position:absolute;inset:0;padding:20px;flex-direction:column;overflow-y:auto;z-index:1}
+.screen.active{display:flex}
+.inner{margin:auto;display:flex;flex-direction:column;align-items:center;gap:14px;width:100%;max-width:960px}
+.logo{font-size:84px;font-weight:900;margin:0;letter-spacing:2px;line-height:1.1;
+  background:linear-gradient(90deg,#ff5c9d,#b07cff,#4aa8ff,#ff5c9d);background-size:200% auto;
+  -webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent;animation:shine 4s linear infinite;
+  filter:drop-shadow(0 3px 0 #fff)}
+.sub{font-size:26px;font-weight:700;color:var(--deep);text-align:center;margin:0}
+.badges{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+.badge{background:#fff;border:3px dashed #ffb3d6;border-radius:999px;padding:8px 18px;font-size:18px;font-weight:700;color:var(--deep)}
+h2{display:inline-block;margin:6px 0 4px;background:#fff;border:3px dashed #ffb3d6;border-radius:999px;padding:5px 20px;color:var(--deep);font-size:21px}
+p{margin:0;font-size:20px;text-align:center}
+.btn{border:none;border-radius:999px;background:linear-gradient(135deg,#ff7eb3,#ff5c9d 50%,#b07cff);color:#fff;font-size:30px;font-weight:800;padding:20px 60px;
+  box-shadow:0 7px 0 #b8336b,0 12px 24px rgba(255,92,157,.4);text-shadow:0 2px 0 rgba(0,0,0,.15)}
+.btn:active{transform:translateY(5px);box-shadow:0 2px 0 #b8336b}
+.btn:disabled{opacity:.4}
+.btn.big{font-size:38px;padding:26px 80px;animation:pulse 1.6s ease-in-out infinite}
+.btn.sub2{background:#fff;color:var(--pink);box-shadow:0 6px 0 #ffc2d9;font-size:20px;padding:12px 28px;text-shadow:none}
+.group{width:100%;text-align:center}
+.chips{display:flex;flex-wrap:wrap;justify-content:center}
+.chip{padding:12px 22px;border-radius:999px;border:3px solid #ffc2e0;background:#fff;color:var(--ink);font-size:20px;font-weight:700;margin:5px;box-shadow:0 4px 0 #ffd6ea}
+.chip small{display:block;font-size:13px;font-weight:600;opacity:.7}
+.chip.sel{background:linear-gradient(135deg,#ff7eb3,#b07cff);border-color:#fff;color:#fff;box-shadow:0 4px 0 #b8336b,0 0 0 3px #ff5c9d;transform:translateY(-2px)}
+.fthumb{border:4px solid transparent;border-radius:12px;background:#fff;padding:4px;margin:5px;box-shadow:0 4px 10px rgba(0,0,0,.12)}
+.fthumb.sel{border-color:var(--pink);box-shadow:0 0 0 3px #ffd6ea,0 6px 14px rgba(255,92,157,.4)}
+.fthumb canvas{width:78px;display:block}
+.fthumb div{font-size:13px;text-align:center;font-weight:700}
+.vwrap{position:relative;width:min(92vw,calc((100vh - 190px) * 4 / 3),900px);aspect-ratio:4/3;background:#000;border-radius:22px;overflow:hidden;border:8px solid #fff;box-shadow:0 0 0 5px #ff9ac4,0 12px 30px rgba(255,92,157,.4)}
+video{width:100%;height:100%;object-fit:cover;transform:scaleX(-1)}
+#cd{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:220px;font-weight:900;color:#fff;text-shadow:0 0 24px #ff5c9d,0 6px 0 #ff5c9d;pointer-events:none}
+#cd.pop{animation:pop .5s ease-out}
+#counter{position:absolute;top:10px;left:14px;font-size:28px;font-weight:800;color:#fff;text-shadow:0 0 8px #ff5c9d,0 2px 0 #ff5c9d}
+#flash{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none;transition:opacity .35s}
+.row{display:flex;gap:30px;align-items:center;justify-content:center;flex-wrap:wrap}
+#resultImg{max-height:78vh;max-width:40vw;border-radius:8px;box-shadow:0 6px 20px rgba(0,0,0,.25);-webkit-user-select:auto;user-select:auto;-webkit-touch-callout:default}
+#qr{background:#fff;padding:14px;border-radius:16px;min-width:190px;min-height:190px;display:flex;align-items:center;justify-content:center;border:4px dashed #ffb3d6}
+#qr img,#qr canvas{display:block}
+.err{color:#d12b2b}
+#faceStatus{font-size:14px;opacity:.75}
+</style>
+</head>
+<body>
+<div id="bg"></div>
+
+<div class="screen active" id="s-start">
+  <div class="inner">
+    <h1 class="logo">Purikura</h1>
+    <p class="sub" id="eventTitle">💖 学校祭プリクラ 💖</p>
+    <div class="badges">
+      <span class="badge">📸 4枚撮影</span>
+      <span class="badge">✨ 盛れる加工</span>
+      <span class="badge">📱 QRで保存</span>
+    </div>
+    <p id="startMsg" style="font-weight:700;color:var(--deep)">画面をタップしてスタート！</p>
+    <button class="btn big" id="btnStart">スタート ✨</button>
+  </div>
+</div>
+
+<div class="screen" id="s-settings">
+  <div class="inner" id="settingsBox"></div>
+</div>
+
+<div class="screen" id="s-shoot">
+  <div class="inner">
+    <div class="vwrap">
+      <video id="video" autoplay playsinline muted></video>
+      <div id="counter"></div>
+      <div id="cd"></div>
+      <div id="flash"></div>
+    </div>
+    <p style="font-weight:700;color:var(--deep)">撮影開始ボタンを押すと4枚撮影されます 📸</p>
+    <div class="row">
+      <button class="btn sub2" id="btnBack">もどる</button>
+      <button class="btn" id="btnShoot">撮影開始 💕</button>
+    </div>
+  </div>
+</div>
+
+<div class="screen" id="s-working">
+  <div class="inner"><h2>加工中… ✨</h2><p id="workMsg">そのままちょっと待ってね</p></div>
+</div>
+
+<div class="screen" id="s-result">
+  <div class="inner">
+    <div class="row">
+      <img id="resultImg" alt="完成">
+      <div style="display:flex;flex-direction:column;align-items:center;gap:12px">
+        <h2>できたよ！ 💖</h2>
+        <div id="qr"></div>
+        <p id="resultMsg">アップロード中…</p>
+        <p style="font-size:15px">読み取ったあと、画像を長押し →<br>「“写真”に追加」で保存できます</p>
+        <button class="btn sub2" id="btnRetry" style="display:none">もう一度送信する</button>
+        <button class="btn" id="btnEnd">おわり</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ===== 設定 ===== */
+const CLOUD_NAME = 'g8matvfw';
+const UPLOAD_PRESET = 'purikura';
+const EVENT_TEXT = '学校祭 2026';
+const SHOT_COUNT = 4;
+const COUNTDOWN = 5;
+const RESET_SEC = 90;
+const MP_VER = '0.10.3';
+const MP_BASE = 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@' + MP_VER;
+const MP_MODEL = 'https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task';
+
+/* ===== データ ===== */
+const FILTERS = {
+  natural:{name:'ナチュラル',p:{br:1.03,ct:1,sat:1.05,r:1,g:1,b:1},css:'brightness(1.03) saturate(1.05)'},
+  pink:{name:'ピンク系',p:{br:1.08,ct:.95,sat:1.1,r:1.06,g:.97,b:1.04},css:'brightness(1.08) contrast(.95) saturate(1.1) hue-rotate(-10deg)'},
+  dream:{name:'ゆめかわ',p:{br:1.1,ct:.9,sat:1.05,r:1.04,g:.98,b:1.09},css:'brightness(1.1) contrast(.9) saturate(1.05) hue-rotate(-4deg)'},
+  blue:{name:'ブルー',p:{br:1.05,ct:1,sat:.95,r:.94,g:1,b:1.1},css:'brightness(1.05) saturate(.95) hue-rotate(10deg)'},
+  cool:{name:'クール',p:{br:1.03,ct:1.12,sat:.88,r:.93,g:.98,b:1.08},css:'brightness(1.03) contrast(1.1) saturate(.88) hue-rotate(8deg)'},
+  mono:{name:'モノクロ',p:{br:1.05,ct:1.1,sat:0,r:1,g:1,b:1},css:'grayscale(1) contrast(1.1)'}
+};
+const BEAUTY = {
+  weak:{name:'弱め',alpha:.28,glow:.04},
+  normal:{name:'普通',alpha:.48,glow:.07},
+  strong:{name:'強め',alpha:.68,glow:.11}
+};
+const FACE_NAMES = {none:'なし',light:'ちょっと',mid:'しっかり',max:'別人級'};
+const TASTES = {cute:'かわいい',cool:'かっこいい'};
+const PRESETS = {
+  natural:{name:'ナチュラル',sub:'自然にきれい',filter:'natural',beauty:'weak',face:'light',taste:'cute'},
+  cute:{name:'かわいい',sub:'盛れる♡',filter:'pink',beauty:'normal',face:'mid',taste:'cute'},
+  cool:{name:'かっこいい',sub:'キリッと',filter:'cool',beauty:'normal',face:'mid',taste:'cool'},
+  max:{name:'別人級',sub:'ぜんぶ盛り',filter:'dream',beauty:'strong',face:'max',taste:'cute'}
+};
+const FRAMES = {
+  pop:{name:'ポップピンク',bg:'#ffe1ee',bg2:'#ffc3dc',accent:'#ff5c9d',dots:true,deco:'heart'},
+  dream:{name:'ゆめかわ',bg:'#f2e0ff',bg2:'#ffe0f1',accent:'#b07cff',dots:true,deco:'mix'},
+  sky:{name:'スカイ',bg:'#dff0ff',bg2:'#bfdcff',accent:'#3b8cff',dots:true,deco:'star'},
+  cool:{name:'ナイト',bg:'#1c2146',bg2:'#10132b',accent:'#bcd0ff',dots:true,deco:'star'},
+  mono:{name:'シンプル',bg:'#ffffff',bg2:'#f2f2f2',accent:'#333333',dots:false,deco:null}
+};
+const defaultState = () => Object.assign({}, PRESETS.cute, {preset:'cute', frame:'pop'});
+let state = defaultState();
+
+/* ===== ヘルパー ===== */
+const $ = id => document.getElementById(id);
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+let resetTimer = null;
+function show(id){
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  $(id).classList.add('active');
+}
+
+/* ===== 背景デコ（ふわふわ） ===== */
+(function(){
+  const em = ['✨','💖','⭐','🎀','💫','🌸','🫧','💕'];
+  const bg = $('bg');
+  for (let i = 0; i < 16; i++){
+    const s = document.createElement('span');
+    s.textContent = em[i % em.length];
+    s.style.left = (Math.random()*96) + 'vw';
+    s.style.fontSize = (20 + Math.random()*30) + 'px';
+    s.style.animationDuration = (9 + Math.random()*9) + 's';
+    s.style.animationDelay = (-Math.random()*16) + 's';
+    bg.appendChild(s);
+  }
+  document.addEventListener('pointerdown', e => {
+    const s = document.createElement('span');
+    s.className = 'spark'; s.textContent = ['✨','💖','⭐','💫'][Math.floor(Math.random()*4)];
+    s.style.left = e.clientX + 'px'; s.style.top = e.clientY + 'px';
+    document.body.appendChild(s);
+    setTimeout(() => s.remove(), 900);
+  });
+})();
+function confetti(){
+  const em = ['💖','✨','⭐','🎀','💕','🌸'];
+  for (let i = 0; i < 26; i++){
+    const s = document.createElement('span');
+    s.className = 'conf'; s.textContent = em[i % em.length];
+    s.style.left = (Math.random()*98) + 'vw';
+    s.style.fontSize = (22 + Math.random()*22) + 'px';
+    s.style.animationDuration = (2.2 + Math.random()*2.2) + 's';
+    s.style.animationDelay = (Math.random()*0.8) + 's';
+    document.body.appendChild(s);
+    setTimeout(() => s.remove(), 5500);
+  }
+}
+
+/* ===== カメラ ===== */
+const video = $('video');
+let stream = null;
+async function startCamera(){
+  if (stream) return;
+  stream = await navigator.mediaDevices.getUserMedia({
+    video:{facingMode:'user',width:{ideal:1280},height:{ideal:960}},audio:false
+  });
+  video.srcObject = stream;
+  await video.play().catch(()=>{});
+}
+
+/* ===== 顔認識（MediaPipe）。失敗しても通常加工で続行 ===== */
+let faceLM = null, faceState = 'idle';
+function faceStatusText(){
+  return {idle:'顔認識：待機中',loading:'顔認識：準備中…（少し待ってね）',ready:'顔認識：OK ✓',failed:'顔認識：使えません（通常の加工になります）'}[faceState];
+}
+function updateFaceStatus(){ const e = $('faceStatus'); if (e) e.textContent = faceStatusText(); }
+async function initFace(){
+  if (faceState !== 'idle') return;
+  faceState = 'loading'; updateFaceStatus();
+  try {
+    const vision = await import(MP_BASE + '/vision_bundle.mjs');
+    const fs = await vision.FilesetResolver.forVisionTasks(MP_BASE + '/wasm');
+    const make = delegate => vision.FaceLandmarker.createFromOptions(fs, {
+      baseOptions:{modelAssetPath:MP_MODEL,delegate:delegate},
+      runningMode:'IMAGE', numFaces:4
+    });
+    try { faceLM = await make('GPU'); } catch (e){ console.warn('GPU失敗→CPU', e); faceLM = await make('CPU'); }
+    faceState = 'ready';
+  } catch (e){
+    console.error('顔認識の読み込みに失敗', e);
+    faceState = 'failed';
+  }
+  updateFaceStatus();
+}
+function detectFaces(c){
+  if (!faceLM) return [];
+  try { const r = faceLM.detect(c); return (r && r.faceLandmarks) ? r.faceLandmarks : []; }
+  catch (e){ console.error(e); return []; }
+}
+
+/* ===== 設定画面 ===== */
+function chipGroup(title, items, selKey, onPick){
+  const g = document.createElement('div'); g.className = 'group';
+  g.innerHTML = '<h2>' + title + '</h2>';
+  const box = document.createElement('div'); box.className = 'chips';
+  items.forEach(([key,label,sub]) => {
+    const b = document.createElement('button');
+    b.className = 'chip' + (state[selKey] === key ? ' sel' : '');
+    b.innerHTML = label + (sub ? '<small>' + sub + '</small>' : '');
+    b.onclick = () => onPick(key);
+    box.appendChild(b);
+  });
+  g.appendChild(box);
+  return g;
+}
+function setManual(k, v){ state[k] = v; state.preset = null; renderSettings(); }
+function renderSettings(){
+  const box = $('settingsBox'); box.innerHTML = '';
+  const t = document.createElement('p');
+  t.innerHTML = '<b style="font-size:26px;color:#d6457f">🎀 好みを選んでね 🎀</b>'; box.appendChild(t);
+  box.appendChild(chipGroup('① おすすめ加工',
+    Object.entries(PRESETS).map(([k,v]) => [k,v.name,v.sub]), 'preset', k => {
+      const p = PRESETS[k]; state.preset = k;
+      state.filter = p.filter; state.beauty = p.beauty; state.face = p.face; state.taste = p.taste;
+      renderSettings();
+    }));
+  box.appendChild(chipGroup('② フィルター',
+    Object.entries(FILTERS).map(([k,v]) => [k,v.name]), 'filter', k => setManual('filter', k)));
+  box.appendChild(chipGroup('③ 美肌の強さ',
+    Object.entries(BEAUTY).map(([k,v]) => [k,v.name]), 'beauty', k => setManual('beauty', k)));
+  box.appendChild(chipGroup('④ 顔の盛り（目・輪郭）',
+    Object.entries(FACE_NAMES).map(([k,v]) => [k,v]), 'face', k => setManual('face', k)));
+  box.appendChild(chipGroup('⑤ テイスト',
+    Object.entries(TASTES).map(([k,v]) => [k,v]), 'taste', k => setManual('taste', k)));
+  const g = document.createElement('div'); g.className = 'group';
+  g.innerHTML = '<h2>⑥ フレーム</h2>';
+  const row = document.createElement('div'); row.className = 'chips';
+  Object.entries(FRAMES).forEach(([k,f]) => {
+    const w = document.createElement('div');
+    w.className = 'fthumb' + (state.frame === k ? ' sel' : '');
+    w.appendChild(composeStrip(null, f, 0.25, ''));
+    const l = document.createElement('div'); l.textContent = f.name; w.appendChild(l);
+    w.onclick = () => { state.frame = k; renderSettings(); };
+    row.appendChild(w);
+  });
+  g.appendChild(row); box.appendChild(g);
+  const ok = document.createElement('button');
+  ok.className = 'btn'; ok.textContent = '決定 💕';
+  ok.onclick = () => { video.style.filter = FILTERS[state.filter].css; show('s-shoot'); };
+  box.appendChild(ok);
+  const st = document.createElement('p'); st.id = 'faceStatus'; box.appendChild(st);
+  updateFaceStatus();
+}
+
+/* ===== 色・肌の処理 ===== */
+function applyColor(ctx, w, h, p){
+  const im = ctx.getImageData(0,0,w,h), d = im.data;
+  for (let i = 0; i < d.length; i += 4){
+    let R = d[i]*p.r*p.br, G = d[i+1]*p.g*p.br, B = d[i+2]*p.b*p.br;
+    R = (R-128)*p.ct+128; G = (G-128)*p.ct+128; B = (B-128)*p.ct+128;
+    const L = 0.299*R + 0.587*G + 0.114*B;
+    d[i] = L+(R-L)*p.sat; d[i+1] = L+(G-L)*p.sat; d[i+2] = L+(B-L)*p.sat;
+  }
+  ctx.putImageData(im,0,0);
+}
+function softCanvas(c, div){
+  const w = c.width, h = c.height, s = document.createElement('canvas');
+  s.width = Math.max(2,Math.round(w/div)); s.height = Math.max(2,Math.round(h/div));
+  const sx = s.getContext('2d');
+  sx.imageSmoothingEnabled = true; sx.imageSmoothingQuality = 'high';
+  sx.drawImage(c,0,0,s.width,s.height);
+  const o = document.createElement('canvas'); o.width = w; o.height = h;
+  const ox = o.getContext('2d');
+  ox.imageSmoothingEnabled = true; ox.imageSmoothingQuality = 'high';
+  ox.drawImage(s,0,0,w,h);
+  return o;
+}
+function softenAll(c, alpha){
+  const o = softCanvas(c, 4), x = c.getContext('2d');
+  x.globalAlpha = alpha; x.drawImage(o,0,0); x.globalAlpha = 1;
+}
+const OVAL = [10,338,297,332,284,251,389,356,454,323,361,288,397,365,379,378,400,377,152,148,176,149,150,136,172,58,132,93,234,127,162,21,54,103,67,109];
+const EYE_A = [33,7,163,144,145,153,154,155,133,173,157,158,159,160,161,246];
+const EYE_B = [362,382,381,380,374,373,390,249,263,466,388,387,386,385,384,398];
+const LIPS = [61,146,91,181,84,17,314,405,321,375,291,409,270,269,267,0,37,39,40,185];
+const BROW_A = [70,63,105,66,107,55,65,52,53,46];
+const BROW_B = [300,293,334,296,336,285,295,282,283,276];
+function polyPath(x, lm, idxs, w, h){
+  x.beginPath();
+  idxs.forEach((i,n) => { const px = lm[i].x*w, py = lm[i].y*h; n ? x.lineTo(px,py) : x.moveTo(px,py); });
+  x.closePath();
+}
+function faceMask(w, h, faces){
+  const sw = Math.round(w/4), sh = Math.round(h/4);
+  const m = document.createElement('canvas'); m.width = sw; m.height = sh;
+  const mx = m.getContext('2d');
+  mx.fillStyle = '#fff';
+  faces.forEach(lm => { polyPath(mx, lm, OVAL, sw, sh); mx.fill(); });
+  mx.globalCompositeOperation = 'destination-out';
+  faces.forEach(lm => {
+    [EYE_A,EYE_B,LIPS,BROW_A,BROW_B].forEach(idx => { polyPath(mx, lm, idx, sw, sh); mx.fill(); });
+  });
+  const tiny = document.createElement('canvas'); tiny.width = Math.round(sw/2); tiny.height = Math.round(sh/2);
+  const tx = tiny.getContext('2d'); tx.imageSmoothingQuality = 'high'; tx.drawImage(m,0,0,tiny.width,tiny.height);
+  const o = document.createElement('canvas'); o.width = w; o.height = h;
+  const ox = o.getContext('2d'); ox.imageSmoothingEnabled = true; ox.imageSmoothingQuality = 'high';
+  ox.drawImage(tiny,0,0,w,h);
+  return o;
+}
+function smoothFaces(c, faces, bt){
+  const w = c.width, h = c.height, x = c.getContext('2d');
+  const mask = faceMask(w, h, faces);
+  const soft = softCanvas(c, 4), sx = soft.getContext('2d');
+  sx.globalCompositeOperation = 'destination-in'; sx.drawImage(mask,0,0);
+  x.globalAlpha = Math.min(.85, bt.alpha*1.25); x.drawImage(soft,0,0); x.globalAlpha = 1;
+  const glow = document.createElement('canvas'); glow.width = w; glow.height = h;
+  const gx = glow.getContext('2d'); gx.fillStyle = '#fff4f8'; gx.fillRect(0,0,w,h);
+  gx.globalCompositeOperation = 'destination-in'; gx.drawImage(mask,0,0);
+  x.globalAlpha = bt.glow; x.drawImage(glow,0,0); x.globalAlpha = 1;
+}
+function blush(c, faces, a){
+  if (!a) return;
+  const w = c.width, h = c.height, x = c.getContext('2d');
+  faces.forEach(lm => {
+    const fw = Math.hypot((lm[234].x-lm[454].x)*w, (lm[234].y-lm[454].y)*h);
+    [50,280].forEach(i => {
+      const cx = lm[i].x*w, cy = lm[i].y*h + fw*0.03, R = fw*0.16;
+      const g = x.createRadialGradient(cx,cy,0,cx,cy,R);
+      g.addColorStop(0,'rgba(255,100,140,' + a + ')'); g.addColorStop(1,'rgba(255,100,140,0)');
+      x.fillStyle = g; x.fillRect(cx-R,cy-R,R*2,R*2);
+    });
+  });
+}
+function catchlight(c, faces){
+  const w = c.width, h = c.height, x = c.getContext('2d');
+  faces.forEach(lm => {
+    if (lm.length < 474) return;
+    [[468,33,133],[473,263,362]].forEach(([ir,a,b]) => {
+      const ew = Math.hypot((lm[a].x-lm[b].x)*w, (lm[a].y-lm[b].y)*h);
+      const cx = lm[ir].x*w - ew*0.10, cy = lm[ir].y*h - ew*0.12, R = ew*0.11;
+      const g = x.createRadialGradient(cx,cy,0,cx,cy,R);
+      g.addColorStop(0,'rgba(255,255,255,.95)'); g.addColorStop(1,'rgba(255,255,255,0)');
+      x.fillStyle = g; x.fillRect(cx-R,cy-R,R*2,R*2);
+    });
+  });
+}
+
+/* ===== 顔の変形（目を大きく・輪郭を小さく） ===== */
+/*WARP-START*/
+const FACE_LEVELS = {
+  none:{eye:0,jaw:0,chin:0},
+  light:{eye:.15,jaw:.035,chin:.02},
+  mid:{eye:.30,jaw:.06,chin:.035},
+  max:{eye:.46,jaw:.09,chin:.05}
+};
+function dist(a,b){ return Math.hypot(a.x-b.x, a.y-b.y); }
+function lmPx(lm,i,w,h){ return {x:lm[i].x*w, y:lm[i].y*h}; }
+function addBulge(dx,dy,w,h,cx,cy,R,s){
+  const x0 = Math.max(0,Math.floor(cx-R)), x1 = Math.min(w-1,Math.ceil(cx+R));
+  const y0 = Math.max(0,Math.floor(cy-R)), y1 = Math.min(h-1,Math.ceil(cy+R));
+  for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++){
+    const ox = x-cx, oy = y-cy, t2 = (ox*ox+oy*oy)/(R*R);
+    if (t2 >= 1) continue;
+    const f = (1-t2)*(1-t2)*s, i = y*w+x;
+    dx[i] -= ox*f; dy[i] -= oy*f;
+  }
+}
+function addPush(dx,dy,w,h,cx,cy,R,vx,vy){
+  const x0 = Math.max(0,Math.floor(cx-R)), x1 = Math.min(w-1,Math.ceil(cx+R));
+  const y0 = Math.max(0,Math.floor(cy-R)), y1 = Math.min(h-1,Math.ceil(cy+R));
+  for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++){
+    const ox = x-cx, oy = y-cy, t2 = (ox*ox+oy*oy)/(R*R);
+    if (t2 >= 1) continue;
+    const f = (1-t2)*(1-t2), i = y*w+x;
+    dx[i] += vx*f; dy[i] += vy*f;
+  }
+}
+function buildDisp(faces,w,h,level,taste){
+  const L = FACE_LEVELS[level] || FACE_LEVELS.none;
+  if (!L.eye && !L.jaw && !L.chin) return null;
+  const dx = new Float32Array(w*h), dy = new Float32Array(w*h);
+  const eyeMul = taste === 'cool' ? 0.55 : 1, jawMul = taste === 'cool' ? 1.2 : 1;
+  for (const lm of faces){
+    const P = i => lmPx(lm,i,w,h);
+    const fw = dist(P(234),P(454)), fh = dist(P(10),P(152));
+    if (!(fw > 20)) continue;
+    const cx = (P(234).x+P(454).x)/2;
+    [[33,133,468],[263,362,473]].forEach(([a,b,iris]) => {
+      const pa = P(a), pb = P(b), ew = dist(pa,pb);
+      const c = lm.length > iris ? P(iris) : {x:(pa.x+pb.x)/2, y:(pa.y+pb.y)/2};
+      addBulge(dx,dy,w,h,c.x,c.y,ew*0.95,L.eye*eyeMul);
+    });
+    [[93,.55],[132,.8],[58,1],[172,1],[323,.55],[361,.8],[288,1],[397,1]].forEach(([i,wt]) => {
+      const p = P(i), sg = Math.sign(p.x-cx) || 1;
+      addPush(dx,dy,w,h,p.x,p.y,fw*0.24,sg*L.jaw*jawMul*fw*wt,0);
+    });
+    const ch = P(152);
+    addPush(dx,dy,w,h,ch.x,ch.y,fw*0.26,0,L.chin*fh);
+  }
+  return {dx:dx, dy:dy};
+}
+function remap(src,w,h,dx,dy){
+  const out = new Uint8ClampedArray(src.length);
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++){
+    const i = y*w+x, o = i*4, ddx = dx[i], ddy = dy[i];
+    if (ddx === 0 && ddy === 0){ out[o]=src[o]; out[o+1]=src[o+1]; out[o+2]=src[o+2]; out[o+3]=src[o+3]; continue; }
+    let sx = x+ddx, sy = y+ddy;
+    sx = Math.min(w-1.001, Math.max(0,sx)); sy = Math.min(h-1.001, Math.max(0,sy));
+    const x0 = sx|0, y0 = sy|0, fx = sx-x0, fy = sy-y0;
+    const a = (y0*w+x0)*4, b = a+4, c = a+w*4, d = c+4;
+    for (let k = 0; k < 4; k++){
+      out[o+k] = (src[a+k]*(1-fx)+src[b+k]*fx)*(1-fy) + (src[c+k]*(1-fx)+src[d+k]*fx)*fy;
+    }
+  }
+  return out;
+}
+/*WARP-END*/
+function warpFaces(c, faces){
+  const w = c.width, h = c.height;
+  const d = buildDisp(faces, w, h, state.face, state.taste);
+  if (!d) return;
+  const x = c.getContext('2d'), im = x.getImageData(0,0,w,h);
+  im.data.set(remap(im.data, w, h, d.dx, d.dy));
+  x.putImageData(im,0,0);
+}
+
+async function processPhoto(raw){
+  const c = document.createElement('canvas'); c.width = raw.width; c.height = raw.height;
+  const x = c.getContext('2d'); x.drawImage(raw,0,0);
+  const bt = BEAUTY[state.beauty];
+  const faces = detectFaces(raw);
+  const cute = state.taste === 'cute';
+  if (faces.length){
+    smoothFaces(c, faces, bt);
+    if (cute) blush(c, faces, {none:0,light:.12,mid:.22,max:.32}[state.face]);
+  } else {
+    softenAll(c, bt.alpha*0.8);
+  }
+  const p = Object.assign({}, FILTERS[state.filter].p);
+  p.br *= 1 + bt.glow;
+  if (!cute) p.ct *= 1.06;
+  applyColor(x, c.width, c.height, p);
+  if (faces.length){
+    if (cute && state.face !== 'none') catchlight(c, faces);
+    if (state.face !== 'none') warpFaces(c, faces);
+  }
+  return c;
+}
+
+/* ===== フレーム合成（縦長ストリップ 600x1800 を S 倍） ===== */
+function heart(x,cx,cy,s){
+  x.beginPath(); x.moveTo(cx,cy+s*0.9);
+  x.bezierCurveTo(cx-s*1.6,cy-s*0.2,cx-s*0.7,cy-s*1.3,cx,cy-s*0.45);
+  x.bezierCurveTo(cx+s*0.7,cy-s*1.3,cx+s*1.6,cy-s*0.2,cx,cy+s*0.9);
+  x.fill();
+}
+function star(x,cx,cy,r){
+  x.beginPath();
+  for (let i = 0; i < 10; i++){
+    const rad = i % 2 === 0 ? r : r*0.45, a = -Math.PI/2 + i*Math.PI/5;
+    const px = cx + Math.cos(a)*rad, py = cy + Math.sin(a)*rad;
+    i === 0 ? x.moveTo(px,py) : x.lineTo(px,py);
+  }
+  x.closePath(); x.fill();
+}
+function sparkle(x,cx,cy,r){
+  x.beginPath(); x.moveTo(cx,cy-r);
+  x.quadraticCurveTo(cx,cy,cx+r,cy); x.quadraticCurveTo(cx,cy,cx,cy+r);
+  x.quadraticCurveTo(cx,cy,cx-r,cy); x.quadraticCurveTo(cx,cy,cx,cy-r);
+  x.fill();
+}
+function rrect(x,a,b,w,h,r){
+  x.beginPath(); x.moveTo(a+r,b);
+  x.arcTo(a+w,b,a+w,b+h,r); x.arcTo(a+w,b+h,a,b+h,r); x.arcTo(a,b+h,a,b,r); x.arcTo(a,b,a+w,b,r);
+  x.closePath();
+}
+function drawShape(x, f, n, cx, cy, s){
+  if (f.deco === 'heart') heart(x,cx,cy,s*0.9);
+  else if (f.deco === 'star') star(x,cx,cy,s*1.2);
+  else if (f.deco === 'mix') (n % 2 ? heart(x,cx,cy,s*0.9) : star(x,cx,cy,s*1.2));
+}
+function composeStrip(photos, f, S, dateText){
+  const W = 600*S, H = 1800*S;
+  const c = document.createElement('canvas'); c.width = W; c.height = H;
+  const x = c.getContext('2d');
+  const g = x.createLinearGradient(0,0,0,H); g.addColorStop(0,f.bg); g.addColorStop(1,f.bg2 || f.bg);
+  x.fillStyle = g; x.fillRect(0,0,W,H);
+  if (f.dots){
+    x.fillStyle = f.accent + '26';
+    for (let row = 0, yy = 0; yy < H; yy += 60*S, row++){
+      for (let xx = (row % 2)*30*S; xx < W; xx += 60*S){
+        x.beginPath(); x.arc(xx,yy,8*S,0,7); x.fill();
+      }
+    }
+  }
+  for (let i = 0; i < SHOT_COUNT; i++){
+    const px = 40*S, py = (90 + i*420)*S, pw = 520*S, ph = 390*S;
+    x.save();
+    x.shadowColor = 'rgba(0,0,0,.25)'; x.shadowBlur = 14*S; x.shadowOffsetY = 4*S;
+    x.fillStyle = '#fff'; x.fillRect(px-7*S,py-7*S,pw+14*S,ph+14*S);
+    x.restore();
+    if (photos) x.drawImage(photos[i],px,py,pw,ph);
+    else { x.fillStyle = '#d9d9d9'; x.fillRect(px,py,pw,ph); }
+    if (f.deco){
+      x.fillStyle = f.accent;
+      drawShape(x,f,i,px+pw-6*S,py+6*S,17*S);
+      drawShape(x,f,i+1,px+6*S,py+ph-6*S,17*S);
+      x.globalAlpha = .85;
+      sparkle(x,18*S,py+ph*0.5,11*S); sparkle(x,W-18*S,py+ph*0.35,9*S);
+      x.globalAlpha = 1;
+      if (i < SHOT_COUNT-1) drawShape(x,f,i,W/2,py+ph+15*S,9*S);
+    }
+  }
+  x.lineWidth = 10*S; x.strokeStyle = f.accent; x.strokeRect(5*S,5*S,W-10*S,H-10*S);
+  const font = '"Hiragino Maru Gothic ProN","Hiragino Sans",-apple-system,sans-serif';
+  x.textAlign = 'center'; x.textBaseline = 'middle';
+  x.font = 'bold ' + (42*S) + 'px ' + font;
+  x.lineWidth = 9*S; x.lineJoin = 'round'; x.strokeStyle = f.bg;
+  x.strokeText(EVENT_TEXT, W/2, 48*S);
+  x.fillStyle = f.accent; x.fillText(EVENT_TEXT, W/2, 48*S);
+  if (f.deco){
+    x.fillStyle = f.accent;
+    [[56,48],[544,48]].forEach(([a,b],n) => drawShape(x,f,n,a*S,b*S,15*S));
+    sparkle(x,110*S,30*S,9*S); sparkle(x,490*S,64*S,9*S);
+  }
+  if (dateText){
+    x.fillStyle = f.accent; rrect(x,170*S,1748*S,260*S,40*S,20*S); x.fill();
+    x.fillStyle = f.deco ? (f.bg === '#1c2146' ? '#10132b' : '#fff') : '#fff';
+    x.font = 'bold ' + (24*S) + 'px ' + font;
+    x.fillText(dateText, W/2, 1769*S);
+  }
+  return c;
+}
+
+/* ===== 撮影 ===== */
+function capture(){
+  const vw = video.videoWidth, vh = video.videoHeight;
+  let sw = vw, sh = vw*3/4;
+  if (sh > vh){ sh = vh; sw = vh*4/3; }
+  const sx = (vw-sw)/2, sy = (vh-sh)/2;
+  const c = document.createElement('canvas'); c.width = 1040; c.height = 780;
+  const x = c.getContext('2d');
+  x.translate(c.width,0); x.scale(-1,1);
+  x.drawImage(video,sx,sy,sw,sh,0,0,c.width,c.height);
+  return c;
+}
+function flash(){
+  const f = $('flash'); f.style.transition = 'none'; f.style.opacity = 1;
+  requestAnimationFrame(() => { f.style.transition = 'opacity .35s'; f.style.opacity = 0; });
+}
+function showCount(t){
+  const e = $('cd'); e.textContent = t; e.classList.remove('pop'); void e.offsetWidth; e.classList.add('pop');
+}
+async function runShooting(){
+  $('btnShoot').disabled = true; $('btnBack').disabled = true;
+  const raws = [];
+  for (let i = 0; i < SHOT_COUNT; i++){
+    $('counter').textContent = (i+1) + ' / ' + SHOT_COUNT;
+    for (let t = COUNTDOWN; t >= 1; t--){ showCount(t); await sleep(1000); }
+    $('cd').textContent = '';
+    flash(); raws.push(capture());
+    await sleep(900);
+  }
+  $('counter').textContent = '';
+  $('btnShoot').disabled = false; $('btnBack').disabled = false;
+  show('s-working'); await sleep(150);
+  const done = [];
+  for (let i = 0; i < raws.length; i++){
+    $('workMsg').textContent = (i+1) + ' / ' + raws.length + ' 枚目を盛り中…';
+    await sleep(40);
+    try { done.push(await processPhoto(raws[i])); }
+    catch (e){ console.error(e); done.push(raws[i]); }
+  }
+  const d = new Date();
+  const dateText = d.getFullYear() + '.' + (d.getMonth()+1) + '.' + d.getDate();
+  showResult(composeStrip(done, FRAMES[state.frame], 2, dateText));
+}
+
+/* ===== 結果・アップロード・QR ===== */
+let lastBlob = null;
+function showResult(canvas){
+  canvas.toBlob(blob => {
+    lastBlob = blob;
+    $('resultImg').src = URL.createObjectURL(blob);
+    $('qr').innerHTML = '';
+    $('btnRetry').style.display = 'none';
+    $('resultMsg').className = ''; $('resultMsg').textContent = 'アップロード中…';
+    show('s-result'); confetti();
+    clearTimeout(resetTimer); resetTimer = setTimeout(resetAll, RESET_SEC*1000);
+    doUpload();
+  }, 'image/jpeg', 0.92);
+}
+async function doUpload(){
+  $('btnRetry').style.display = 'none';
+  $('resultMsg').className = ''; $('resultMsg').textContent = 'アップロード中…';
+  try {
+    const fd = new FormData();
+    fd.append('file', lastBlob, 'purikura.jpg');
+    fd.append('upload_preset', UPLOAD_PRESET);
+    const ctl = new AbortController();
+    const to = setTimeout(() => ctl.abort(), 30000);
+    const r = await fetch('https://api.cloudinary.com/v1_1/' + CLOUD_NAME + '/image/upload', {method:'POST',body:fd,signal:ctl.signal});
+    clearTimeout(to);
+    if (!r.ok) throw new Error(await r.text());
+    const url = (await r.json()).secure_url;
+    drawQR(url);
+    $('resultMsg').textContent = 'スマホでQRコードを読み取ってね 📱';
+  } catch (e){
+    console.error(e);
+    $('resultMsg').className = 'err';
+    $('resultMsg').textContent = '送信に失敗しました。Wi-Fiを確認して、もう一度送信してください';
+    $('btnRetry').style.display = 'block';
+  }
+}
+function drawQR(url){
+  const q = $('qr'); q.innerHTML = '';
+  if (typeof QRCode !== 'undefined'){
+    new QRCode(q, {text:url,width:240,height:240,correctLevel:QRCode.CorrectLevel.M});
+  } else {
+    const img = new Image(); img.width = 240; img.height = 240;
+    img.src = 'https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=' + encodeURIComponent(url);
+    q.appendChild(img);
+  }
+}
+
+/* ===== 画面遷移 ===== */
+function resetAll(){
+  clearTimeout(resetTimer);
+  state = defaultState();
+  $('startMsg').textContent = '画面をタップしてスタート！';
+  show('s-start');
+}
+$('btnStart').onclick = async () => {
+  try {
+    $('startMsg').textContent = 'カメラを準備しています…';
+    await startCamera();
+    renderSettings();
+    show('s-settings');
+    initFace();
+  } catch (e){
+    console.error(e);
+    $('startMsg').textContent = 'カメラが使えません。Safariの設定でカメラを許可して、もう一度押してください';
+  }
+};
+$('btnBack').onclick = () => show('s-settings');
+$('btnShoot').onclick = runShooting;
+$('btnRetry').onclick = doUpload;
+$('btnEnd').onclick = resetAll;
+$('eventTitle').textContent = '💖 ' + EVENT_TEXT + ' プリクラ 💖';
+setTimeout(initFace, 600);
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+</body>
+</html>
