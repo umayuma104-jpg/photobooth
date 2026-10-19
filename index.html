@@ -139,17 +139,16 @@ const FILTERS = {
   mono:{name:'モノクロ',p:{br:1.05,ct:1.1,sat:0,r:1,g:1,b:1},css:'grayscale(1) contrast(1.1)'}
 };
 const BEAUTY = {
-  weak:{name:'弱め',alpha:.28,glow:.04},
-  normal:{name:'普通',alpha:.48,glow:.07},
-  strong:{name:'強め',alpha:.68,glow:.11}
+  weak:{name:'弱め',alpha:.28,glow:.05},
+  normal:{name:'普通',alpha:.48,glow:.09},
+  strong:{name:'強め',alpha:.68,glow:.13}
 };
-const FACE_NAMES = {none:'なし',light:'ちょっと',mid:'しっかり',max:'別人級'};
+const FACE_NAMES = {none:'なし',light:'ちょっと',mid:'しっかり'};
 const TASTES = {cute:'かわいい',cool:'かっこいい'};
 const PRESETS = {
   natural:{name:'ナチュラル',sub:'自然にきれい',filter:'natural',beauty:'weak',face:'light',taste:'cute'},
   cute:{name:'かわいい',sub:'盛れる♡',filter:'pink',beauty:'normal',face:'mid',taste:'cute'},
-  cool:{name:'かっこいい',sub:'キリッと',filter:'cool',beauty:'normal',face:'mid',taste:'cool'},
-  max:{name:'別人級',sub:'ぜんぶ盛り',filter:'dream',beauty:'strong',face:'max',taste:'cute'}
+  cool:{name:'かっこいい',sub:'キリッと',filter:'cool',beauty:'normal',face:'mid',taste:'cool'}
 };
 const FRAMES = {
   pop:{name:'ポップピンク',bg:'#ffe1ee',bg2:'#ffc3dc',accent:'#ff5c9d',dots:true,deco:'heart'},
@@ -295,20 +294,25 @@ function renderSettings(){
   g.appendChild(row); box.appendChild(g);
   const ok = document.createElement('button');
   ok.className = 'btn'; ok.textContent = '決定 💕';
-  ok.onclick = () => { video.style.filter = FILTERS[state.filter].css; show('s-shoot'); };
+  ok.onclick = () => { video.style.filter = FILTERS[state.filter].css + ' brightness(1.08)'; show('s-shoot'); };
   box.appendChild(ok);
   const st = document.createElement('p'); st.id = 'faceStatus'; box.appendChild(st);
   updateFaceStatus();
 }
 
 /* ===== 色・肌の処理 ===== */
-function applyColor(ctx, w, h, p){
+function applyColor(ctx, w, h, p, gamma){
+  const lut = new Uint8ClampedArray(256);
+  for (let i = 0; i < 256; i++) lut[i] = 255*Math.pow(i/255, gamma || 1);
   const im = ctx.getImageData(0,0,w,h), d = im.data;
   for (let i = 0; i < d.length; i += 4){
     let R = d[i]*p.r*p.br, G = d[i+1]*p.g*p.br, B = d[i+2]*p.b*p.br;
     R = (R-128)*p.ct+128; G = (G-128)*p.ct+128; B = (B-128)*p.ct+128;
     const L = 0.299*R + 0.587*G + 0.114*B;
-    d[i] = L+(R-L)*p.sat; d[i+1] = L+(G-L)*p.sat; d[i+2] = L+(B-L)*p.sat;
+    const r2 = L+(R-L)*p.sat, g2 = L+(G-L)*p.sat, b2 = L+(B-L)*p.sat;
+    d[i] = lut[r2 < 0 ? 0 : r2 > 255 ? 255 : r2|0];
+    d[i+1] = lut[g2 < 0 ? 0 : g2 > 255 ? 255 : g2|0];
+    d[i+2] = lut[b2 < 0 ? 0 : b2 > 255 ? 255 : b2|0];
   }
   ctx.putImageData(im,0,0);
 }
@@ -334,17 +338,37 @@ const EYE_B = [362,382,381,380,374,373,390,249,263,466,388,387,386,385,384,398];
 const LIPS = [61,146,91,181,84,17,314,405,321,375,291,409,270,269,267,0,37,39,40,185];
 const BROW_A = [70,63,105,66,107,55,65,52,53,46];
 const BROW_B = [300,293,334,296,336,285,295,282,283,276];
-function polyPath(x, lm, idxs, w, h){
+function polyPath(x, lm, idxs, w, h, k){
+  let cx = 0, cy = 0;
+  if (k){ cx = (lm[234].x+lm[454].x)/2*w; cy = (lm[10].y+lm[152].y)/2*h; }
   x.beginPath();
-  idxs.forEach((i,n) => { const px = lm[i].x*w, py = lm[i].y*h; n ? x.lineTo(px,py) : x.moveTo(px,py); });
+  idxs.forEach((i,n) => {
+    let px = lm[i].x*w, py = lm[i].y*h;
+    if (k){ px = cx + (px-cx)*k; py = cy + (py-cy)*k; }
+    n ? x.lineTo(px,py) : x.moveTo(px,py);
+  });
   x.closePath();
 }
-function faceMask(w, h, faces){
-  const sw = Math.round(w/4), sh = Math.round(h/4);
+/* 髪・影など暗い部分には効かせない（明るさから「肌っぽさ」を計算） */
+function skinWeight(c){
+  const w = c.width, h = c.height;
+  const im = c.getContext('2d').getImageData(0,0,w,h), d = im.data;
+  for (let i = 0; i < d.length; i += 4){
+    const L = 0.299*d[i] + 0.587*d[i+1] + 0.114*d[i+2];
+    let t = (L-70)/55; t = t < 0 ? 0 : t > 1 ? 1 : t;
+    d[i] = 255; d[i+1] = 255; d[i+2] = 255; d[i+3] = 255*t*t*(3-2*t);
+  }
+  const o = document.createElement('canvas'); o.width = w; o.height = h;
+  o.getContext('2d').putImageData(im,0,0);
+  return o;
+}
+/* 顔の中心ほど濃く、外側ほど薄くなるマスク（目・眉・口と、髪は除外） */
+function faceMask(c, faces, grad, skin){
+  const w = c.width, h = c.height, sw = Math.round(w/4), sh = Math.round(h/4);
   const m = document.createElement('canvas'); m.width = sw; m.height = sh;
   const mx = m.getContext('2d');
   mx.fillStyle = '#fff';
-  faces.forEach(lm => { polyPath(mx, lm, OVAL, sw, sh); mx.fill(); });
+  faces.forEach(lm => { polyPath(mx, lm, OVAL, sw, sh, .93); mx.fill(); });
   mx.globalCompositeOperation = 'destination-out';
   faces.forEach(lm => {
     [EYE_A,EYE_B,LIPS,BROW_A,BROW_B].forEach(idx => { polyPath(mx, lm, idx, sw, sh); mx.fill(); });
@@ -354,11 +378,30 @@ function faceMask(w, h, faces){
   const o = document.createElement('canvas'); o.width = w; o.height = h;
   const ox = o.getContext('2d'); ox.imageSmoothingEnabled = true; ox.imageSmoothingQuality = 'high';
   ox.drawImage(tiny,0,0,w,h);
+  ox.globalCompositeOperation = 'destination-in';
+  if (grad){
+    const g = document.createElement('canvas'); g.width = w; g.height = h;
+    const gx = g.getContext('2d');
+    faces.forEach(lm => {
+      const fw = Math.hypot((lm[234].x-lm[454].x)*w, (lm[234].y-lm[454].y)*h);
+      const fh = Math.hypot((lm[10].x-lm[152].x)*w, (lm[10].y-lm[152].y)*h);
+      const cx = (lm[234].x+lm[454].x)/2*w, cy = lm[1].y*h - fh*0.08;
+      const rx = fw*0.78, ry = fh*0.75;
+      gx.save(); gx.translate(cx,cy); gx.scale(1, ry/rx);
+      const rg = gx.createRadialGradient(0,0,0,0,0,rx);
+      rg.addColorStop(0,'rgba(255,255,255,1)'); rg.addColorStop(.55,'rgba(255,255,255,.85)'); rg.addColorStop(1,'rgba(255,255,255,0)');
+      gx.fillStyle = rg; gx.fillRect(-rx,-rx,rx*2,rx*2);
+      gx.restore();
+    });
+    ox.drawImage(g,0,0);
+  }
+  ox.drawImage(skin || skinWeight(c),0,0);
+  ox.globalCompositeOperation = 'source-over';
   return o;
 }
-function smoothFaces(c, faces, bt){
+function smoothFaces(c, faces, bt, skin){
   const w = c.width, h = c.height, x = c.getContext('2d');
-  const mask = faceMask(w, h, faces);
+  const mask = faceMask(c, faces, true, skin);
   const soft = softCanvas(c, 4), sx = soft.getContext('2d');
   sx.globalCompositeOperation = 'destination-in'; sx.drawImage(mask,0,0);
   x.globalAlpha = Math.min(.85, bt.alpha*1.25); x.drawImage(soft,0,0); x.globalAlpha = 1;
@@ -367,9 +410,11 @@ function smoothFaces(c, faces, bt){
   gx.globalCompositeOperation = 'destination-in'; gx.drawImage(mask,0,0);
   x.globalAlpha = bt.glow; x.drawImage(glow,0,0); x.globalAlpha = 1;
 }
-function blush(c, faces, a){
+function blush(c, faces, a, skin){
   if (!a) return;
-  const w = c.width, h = c.height, x = c.getContext('2d');
+  const w = c.width, h = c.height;
+  const layer = document.createElement('canvas'); layer.width = w; layer.height = h;
+  const x = layer.getContext('2d');
   faces.forEach(lm => {
     const fw = Math.hypot((lm[234].x-lm[454].x)*w, (lm[234].y-lm[454].y)*h);
     [50,280].forEach(i => {
@@ -379,19 +424,9 @@ function blush(c, faces, a){
       x.fillStyle = g; x.fillRect(cx-R,cy-R,R*2,R*2);
     });
   });
-}
-function catchlight(c, faces){
-  const w = c.width, h = c.height, x = c.getContext('2d');
-  faces.forEach(lm => {
-    if (lm.length < 474) return;
-    [[468,33,133],[473,263,362]].forEach(([ir,a,b]) => {
-      const ew = Math.hypot((lm[a].x-lm[b].x)*w, (lm[a].y-lm[b].y)*h);
-      const cx = lm[ir].x*w - ew*0.10, cy = lm[ir].y*h - ew*0.12, R = ew*0.11;
-      const g = x.createRadialGradient(cx,cy,0,cx,cy,R);
-      g.addColorStop(0,'rgba(255,255,255,.95)'); g.addColorStop(1,'rgba(255,255,255,0)');
-      x.fillStyle = g; x.fillRect(cx-R,cy-R,R*2,R*2);
-    });
-  });
+  x.globalCompositeOperation = 'destination-in';
+  x.drawImage(faceMask(c, faces, false, skin),0,0);
+  c.getContext('2d').drawImage(layer,0,0);
 }
 
 /* ===== 顔の変形（目を大きく・輪郭を小さく） ===== */
