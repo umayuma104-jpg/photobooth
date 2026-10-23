@@ -58,6 +58,9 @@ video{width:100%;height:100%;object-fit:cover;transform:scaleX(-1)}
 #qr img,#qr canvas{display:block}
 .err{color:#d12b2b}
 #faceStatus{font-size:14px;opacity:.75}
+#s-shoot{transition:background .4s}
+#s-shoot.lit{background:#fff}
+#s-shoot.lit .vwrap{box-shadow:0 0 0 5px #ff9ac4,0 0 0 14px #fff,0 8px 24px rgba(0,0,0,.18)}
 </style>
 </head>
 <body>
@@ -92,6 +95,7 @@ video{width:100%;height:100%;object-fit:cover;transform:scaleX(-1)}
     <p style="font-weight:700;color:var(--deep)">撮影開始ボタンを押すと4枚撮影されます 📸</p>
     <div class="row">
       <button class="btn sub2" id="btnBack">もどる</button>
+      <button class="btn sub2" id="btnLight">💡 ライト：自動</button>
       <button class="btn" id="btnShoot">撮影開始 💕</button>
     </div>
   </div>
@@ -167,6 +171,7 @@ let resetTimer = null;
 function show(id){
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   $(id).classList.add('active');
+  if (id === 's-shoot') startLightMonitor(); else stopLightMonitor();
 }
 
 /* ===== 背景デコ（ふわふわ） ===== */
@@ -210,10 +215,64 @@ let stream = null;
 async function startCamera(){
   if (stream) return;
   stream = await navigator.mediaDevices.getUserMedia({
-    video:{facingMode:'user',width:{ideal:1280},height:{ideal:960}},audio:false
+    video:{facingMode:'user',width:{ideal:1280},height:{ideal:960},frameRate:{ideal:24,max:30}},audio:false
   });
+  try {
+    const tr = stream.getVideoTracks()[0];
+    const caps = tr.getCapabilities ? tr.getCapabilities() : {};
+    const adv = {};
+    if (caps.exposureMode && caps.exposureMode.includes('continuous')) adv.exposureMode = 'continuous';
+    if (caps.whiteBalanceMode && caps.whiteBalanceMode.includes('continuous')) adv.whiteBalanceMode = 'continuous';
+    if (caps.exposureCompensation) adv.exposureCompensation = caps.exposureCompensation.min + (caps.exposureCompensation.max - caps.exposureCompensation.min) * 0.75;
+    if (Object.keys(adv).length) await tr.applyConstraints({advanced:[adv]});
+  } catch (e){ console.warn('カメラ詳細設定は未対応', e); }
   video.srcObject = stream;
   await video.play().catch(()=>{});
+}
+
+/* ===== 暗い場所対応：画面ライト・プレビュー補正・撮影後の自動露出 ===== */
+let lightMode = 'auto', lightOn = false, boost = 1, previewBase = '', monTimer = null;
+const LIGHT_LABEL = {auto:'💡 ライト：自動', on:'💡 ライト：つよい', off:'💡 ライト：なし'};
+const meter = document.createElement('canvas'); meter.width = 64; meter.height = 48;
+const mctx = meter.getContext('2d', {willReadFrequently:true});
+function lumaOf(src, sx, sy, sw, sh){
+  mctx.drawImage(src, sx, sy, sw, sh, 0, 0, 64, 48);
+  const d = mctx.getImageData(0,0,64,48).data;
+  let s = 0, n = 0;
+  for (let y = 7; y < 41; y++) for (let x = 13; x < 51; x++){
+    const o = (y*64+x)*4; s += 0.299*d[o] + 0.587*d[o+1] + 0.114*d[o+2]; n++;
+  }
+  return s/n;
+}
+function applyPreview(){ video.style.filter = previewBase + ' brightness(' + boost.toFixed(2) + ')'; }
+function tickLight(){
+  if (!video.videoWidth) return;
+  const vw = video.videoWidth, vh = video.videoHeight;
+  let sw = vw, sh = vw*3/4;
+  if (sh > vh){ sh = vh; sw = vh*4/3; }
+  const m = lumaOf(video, (vw-sw)/2, (vh-sh)/2, sw, sh);
+  if (lightMode === 'auto'){ if (m < 90) lightOn = true; else if (m > 170) lightOn = false; }
+  else lightOn = (lightMode === 'on');
+  $('s-shoot').classList.toggle('lit', lightOn);
+  const want = Math.min(1.9, Math.max(1, 125/Math.max(m,20)));
+  boost += (want - boost)*0.4;
+  applyPreview();
+}
+function startLightMonitor(){ stopLightMonitor(); tickLight(); monTimer = setInterval(tickLight, 400); }
+function stopLightMonitor(){ if (monTimer){ clearInterval(monTimer); monTimer = null; } }
+/* 暗い写真を持ち上げる（ガンマ補正）＋持ち上げで目立つノイズを軽くなじませる */
+function autoExposure(c){
+  const TARGET = 120, mean = lumaOf(c, 0, 0, c.width, c.height);
+  const g = Math.max(0.42, Math.log(TARGET/255)/Math.log(Math.max(mean,8)/255));
+  if (!(mean < TARGET) || g > 0.95) return;
+  const x = c.getContext('2d'), im = x.getImageData(0,0,c.width,c.height), d = im.data;
+  const lut = new Uint8ClampedArray(256);
+  for (let i = 0; i < 256; i++) lut[i] = 255*Math.pow(i/255, g);
+  for (let i = 0; i < d.length; i += 4){ d[i] = lut[d[i]]; d[i+1] = lut[d[i+1]]; d[i+2] = lut[d[i+2]]; }
+  x.putImageData(im,0,0);
+  const dark = Math.min(1, (TARGET-mean)/80);
+  const o = softCanvas(c, 2);
+  x.globalAlpha = 0.3*dark; x.drawImage(o,0,0); x.globalAlpha = 1;
 }
 
 /* ===== 顔認識（MediaPipe）。失敗しても通常加工で続行 ===== */
@@ -294,7 +353,7 @@ function renderSettings(){
   g.appendChild(row); box.appendChild(g);
   const ok = document.createElement('button');
   ok.className = 'btn'; ok.textContent = '決定 💕';
-  ok.onclick = () => { video.style.filter = FILTERS[state.filter].css + ' brightness(1.08)'; show('s-shoot'); };
+  ok.onclick = () => { previewBase = FILTERS[state.filter].css + ' brightness(1.08)'; boost = 1; applyPreview(); show('s-shoot'); };
   box.appendChild(ok);
   const st = document.createElement('p'); st.id = 'faceStatus'; box.appendChild(st);
   updateFaceStatus();
@@ -541,8 +600,9 @@ function warpFaces(c, faces){
 async function processPhoto(raw){
   const c = document.createElement('canvas'); c.width = raw.width; c.height = raw.height;
   const x = c.getContext('2d'); x.drawImage(raw,0,0);
+  autoExposure(c);
   const bt = BEAUTY[state.beauty];
-  const faces = detectFaces(raw);
+  const faces = detectFaces(c);
   const cute = state.taste === 'cute';
   if (faces.length){
     const W = smoothFaces(c, faces, bt);
@@ -664,7 +724,7 @@ function showCount(t){
   const e = $('cd'); e.textContent = t; e.classList.remove('pop'); void e.offsetWidth; e.classList.add('pop');
 }
 async function runShooting(){
-  $('btnShoot').disabled = true; $('btnBack').disabled = true;
+  $('btnShoot').disabled = true; $('btnBack').disabled = true; $('btnLight').disabled = true;
   const raws = [];
   for (let i = 0; i < SHOT_COUNT; i++){
     $('counter').textContent = (i+1) + ' / ' + SHOT_COUNT;
@@ -674,7 +734,7 @@ async function runShooting(){
     await sleep(900);
   }
   $('counter').textContent = '';
-  $('btnShoot').disabled = false; $('btnBack').disabled = false;
+  $('btnShoot').disabled = false; $('btnBack').disabled = false; $('btnLight').disabled = false;
   show('s-working'); await sleep(150);
   const done = [];
   for (let i = 0; i < raws.length; i++){
@@ -739,6 +799,7 @@ function drawQR(url){
 function resetAll(){
   clearTimeout(resetTimer);
   state = defaultState();
+  lightMode = 'auto'; $('btnLight').textContent = LIGHT_LABEL.auto;
   $('startMsg').textContent = '画面をタップしてスタート！';
   show('s-start');
 }
@@ -755,6 +816,11 @@ $('btnStart').onclick = async () => {
   }
 };
 $('btnBack').onclick = () => show('s-settings');
+$('btnLight').onclick = () => {
+  lightMode = {auto:'on', on:'off', off:'auto'}[lightMode];
+  $('btnLight').textContent = LIGHT_LABEL[lightMode];
+  tickLight();
+};
 $('btnShoot').onclick = runShooting;
 $('btnRetry').onclick = doUpload;
 $('btnEnd').onclick = resetAll;
