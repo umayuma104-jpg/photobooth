@@ -5,10 +5,14 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <title>プリクラ</title>
 <style>
-:root{--pink:#ff5c9d;--deep:#d6457f;--ink:#3a2a33}
+:root{--pink:#ff8a1f;--deep:#ffb455;--ink:#2a1b3d;--cream:#fff1dc}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none}
-html,body{margin:0;height:100%;color:var(--ink);font-family:-apple-system,"Hiragino Maru Gothic ProN","Hiragino Sans",sans-serif;overflow:hidden;touch-action:manipulation;
-  background:linear-gradient(160deg,#ffe3f1 0%,#e8dcff 55%,#d7ecff 100%)}
+html,body{margin:0;height:100%;color:var(--cream);font-family:-apple-system,"Hiragino Maru Gothic ProN","Hiragino Sans",sans-serif;overflow:hidden;touch-action:manipulation;
+  background:
+    radial-gradient(circle at 82% 17%,#ffe27a 0 8.5vmin,rgba(255,214,102,.28) 8.6vmin 12vmin,rgba(255,214,102,0) 12.1vmin),
+    radial-gradient(circle at 1px 1px,rgba(255,255,255,.07) 2px,transparent 2.6px) 0 0/20px 20px,
+    linear-gradient(180deg,#22104a 0%,#43217a 55%,#c25a1f 100%)}
+#scene{position:fixed;left:0;bottom:0;width:100%;height:30vh;z-index:0;pointer-events:none}
 #bg{position:fixed;inset:0;overflow:hidden;pointer-events:none;z-index:0}
 #bg span{position:absolute;bottom:-12vh;opacity:0;animation:floatUp linear infinite}
 @keyframes floatUp{0%{transform:translateY(0) rotate(0);opacity:0}10%{opacity:.85}90%{opacity:.7}100%{transform:translateY(-118vh) rotate(50deg);opacity:0}}
@@ -23,44 +27,44 @@ html,body{margin:0;height:100%;color:var(--ink);font-family:-apple-system,"Hirag
 .screen.active{display:flex}
 .inner{margin:auto;display:flex;flex-direction:column;align-items:center;gap:14px;width:100%;max-width:960px}
 .logo{font-size:84px;font-weight:900;margin:0;letter-spacing:2px;line-height:1.1;
-  background:linear-gradient(90deg,#ff5c9d,#b07cff,#4aa8ff,#ff5c9d);background-size:200% auto;
+  background:linear-gradient(90deg,#ff8a1f,#ffd34d,#c78bff,#ff8a1f);background-size:200% auto;
   -webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent;animation:shine 4s linear infinite;
-  filter:drop-shadow(0 3px 0 #fff)}
+  filter:drop-shadow(0 3px 0 #1b0b33) drop-shadow(0 0 18px rgba(255,138,31,.55))}
 .sub{font-size:26px;font-weight:700;color:var(--deep);text-align:center;margin:0}
 .badges{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
-.badge{background:#fff;border:3px dashed #ffb3d6;border-radius:999px;padding:8px 18px;font-size:18px;font-weight:700;color:var(--deep)}
-h2{display:inline-block;margin:6px 0 4px;background:#fff;border:3px dashed #ffb3d6;border-radius:999px;padding:5px 20px;color:var(--deep);font-size:21px}
+.badge{background:rgba(27,11,51,.65);border:3px dashed #ff9f40;border-radius:999px;padding:8px 18px;font-size:18px;font-weight:700;color:var(--deep)}
+h2{display:inline-block;margin:6px 0 4px;background:rgba(27,11,51,.65);border:3px dashed #ff9f40;border-radius:999px;padding:5px 20px;color:var(--deep);font-size:21px}
 p{margin:0;font-size:20px;text-align:center}
-.btn{border:none;border-radius:999px;background:linear-gradient(135deg,#ff7eb3,#ff5c9d 50%,#b07cff);color:#fff;font-size:30px;font-weight:800;padding:20px 60px;
-  box-shadow:0 7px 0 #b8336b,0 12px 24px rgba(255,92,157,.4);text-shadow:0 2px 0 rgba(0,0,0,.15)}
-.btn:active{transform:translateY(5px);box-shadow:0 2px 0 #b8336b}
+.btn{border:none;border-radius:999px;background:linear-gradient(135deg,#ffb04a,#ff7a1a 55%,#d9480f);color:#fff;font-size:30px;font-weight:800;padding:20px 60px;
+  box-shadow:0 7px 0 #8f3208,0 12px 24px rgba(255,122,26,.45);text-shadow:0 2px 0 rgba(0,0,0,.15)}
+.btn:active{transform:translateY(5px);box-shadow:0 2px 0 #8f3208}
 .btn:disabled{opacity:.4}
 .btn.big{font-size:38px;padding:26px 80px;animation:pulse 1.6s ease-in-out infinite}
-.btn.sub2{background:#fff;color:var(--pink);box-shadow:0 6px 0 #ffc2d9;font-size:20px;padding:12px 28px;text-shadow:none}
+.btn.sub2{background:#3b1d6e;color:var(--deep);box-shadow:0 6px 0 #1b0b33;font-size:20px;padding:12px 28px;text-shadow:none}
 .group{width:100%;text-align:center}
 .chips{display:flex;flex-wrap:wrap;justify-content:center}
-.chip{padding:12px 22px;border-radius:999px;border:3px solid #ffc2e0;background:#fff;color:var(--ink);font-size:20px;font-weight:700;margin:5px;box-shadow:0 4px 0 #ffd6ea}
+.chip{padding:12px 22px;border-radius:999px;border:3px solid #ffbf80;background:#fff;color:var(--ink);font-size:20px;font-weight:700;margin:5px;box-shadow:0 4px 0 #ffd9aa}
 .chip small{display:block;font-size:13px;font-weight:600;opacity:.7}
-.chip.sel{background:linear-gradient(135deg,#ff7eb3,#b07cff);border-color:#fff;color:#fff;box-shadow:0 4px 0 #b8336b,0 0 0 3px #ff5c9d;transform:translateY(-2px)}
-.fthumb{border:4px solid transparent;border-radius:12px;background:#fff;padding:4px;margin:5px;box-shadow:0 4px 10px rgba(0,0,0,.12)}
-.fthumb.sel{border-color:var(--pink);box-shadow:0 0 0 3px #ffd6ea,0 6px 14px rgba(255,92,157,.4)}
+.chip.sel{background:linear-gradient(135deg,#ff9a2e,#9b5de5);border-color:#fff;color:#fff;box-shadow:0 4px 0 #5d2a99,0 0 0 3px #ff9a2e;transform:translateY(-2px)}
+.fthumb{color:var(--ink);border:4px solid transparent;border-radius:12px;background:#fff;padding:4px;margin:5px;box-shadow:0 4px 10px rgba(0,0,0,.12)}
+.fthumb.sel{border-color:var(--pink);box-shadow:0 0 0 3px #ffd9aa,0 6px 14px rgba(255,138,31,.5)}
 .fthumb canvas{width:78px;display:block}
 .fthumb div{font-size:13px;text-align:center;font-weight:700}
-.vwrap{position:relative;width:min(92vw,calc((100vh - 190px) * 4 / 3),900px);aspect-ratio:4/3;background:#000;border-radius:22px;overflow:hidden;border:8px solid #fff;box-shadow:0 0 0 5px #ff9ac4,0 12px 30px rgba(255,92,157,.4)}
+.vwrap{position:relative;width:min(92vw,calc((100vh - 190px) * 4 / 3),900px);aspect-ratio:4/3;background:#000;border-radius:22px;overflow:hidden;border:8px solid #fff;box-shadow:0 0 0 5px #ff9a2e,0 12px 30px rgba(255,138,31,.45)}
 video{width:100%;height:100%;object-fit:cover;transform:scaleX(-1)}
-#cd{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:220px;font-weight:900;color:#fff;text-shadow:0 0 24px #ff5c9d,0 6px 0 #ff5c9d;pointer-events:none}
+#cd{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:220px;font-weight:900;color:#fff;text-shadow:0 0 24px #ff8a1f,0 6px 0 #d9480f;pointer-events:none}
 #cd.pop{animation:pop .5s ease-out}
-#counter{position:absolute;top:10px;left:14px;font-size:28px;font-weight:800;color:#fff;text-shadow:0 0 8px #ff5c9d,0 2px 0 #ff5c9d}
+#counter{position:absolute;top:10px;left:14px;font-size:28px;font-weight:800;color:#fff;text-shadow:0 0 8px #ff8a1f,0 2px 0 #d9480f}
 #flash{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none;transition:opacity .35s}
 .row{display:flex;gap:30px;align-items:center;justify-content:center;flex-wrap:wrap}
 #resultImg{max-height:78vh;max-width:40vw;border-radius:8px;box-shadow:0 6px 20px rgba(0,0,0,.25);-webkit-user-select:auto;user-select:auto;-webkit-touch-callout:default}
-#qr{background:#fff;padding:14px;border-radius:16px;min-width:190px;min-height:190px;display:flex;align-items:center;justify-content:center;border:4px dashed #ffb3d6}
+#qr{background:#fff;padding:14px;border-radius:16px;min-width:190px;min-height:190px;display:flex;align-items:center;justify-content:center;border:4px dashed #ff9f40}
 #qr img,#qr canvas{display:block}
-.err{color:#d12b2b}
+.err{color:#ff7b7b}
 #faceStatus{font-size:14px;opacity:.75}
-#guide{position:fixed;inset:0;z-index:100;display:none;align-items:center;justify-content:center;background:rgba(58,42,51,.55);padding:16px}
+#guide{position:fixed;inset:0;z-index:100;display:none;align-items:center;justify-content:center;background:rgba(20,8,40,.72);padding:16px}
 #guide.open{display:flex}
-.gcard{--ga:#ff5c9d;position:relative;width:min(94vw,560px);max-height:94vh;overflow-y:auto;background:#fff;border:5px dashed var(--ga);border-radius:28px;padding:26px 22px 20px;text-align:center;box-shadow:0 14px 40px rgba(0,0,0,.3);animation:gpop .3s ease-out}
+.gcard{--ga:#ff8a1f;position:relative;width:min(94vw,560px);max-height:94vh;overflow-y:auto;background:#2a1450;color:var(--cream);border:5px dashed var(--ga);border-radius:28px;padding:26px 22px 20px;text-align:center;box-shadow:0 14px 40px rgba(0,0,0,.3);animation:gpop .3s ease-out}
 @keyframes gpop{from{transform:scale(.85);opacity:0}to{transform:scale(1);opacity:1}}
 .gx{position:absolute;top:8px;right:14px;border:none;background:none;font-size:32px;line-height:1;color:var(--deep)}
 .gcount{font-size:15px;font-weight:700;opacity:.6}
@@ -69,19 +73,39 @@ video{width:100%;height:100%;object-fit:cover;transform:scaleX(-1)}
 .gsub{font-size:19px;font-weight:700;color:var(--deep)}
 .gdesc{font-size:19px;margin:12px 0;line-height:1.6}
 .grows{display:flex;flex-direction:column;gap:8px;margin:12px 0}
-.grow{display:flex;justify-content:space-between;align-items:center;gap:10px;background:#fff5fa;border-radius:14px;padding:10px 16px;font-size:18px;font-weight:700;text-align:left}
+.grow{display:flex;justify-content:space-between;align-items:center;gap:10px;background:rgba(255,255,255,.1);border-radius:14px;padding:10px 16px;font-size:18px;font-weight:700;text-align:left}
 .grow span{color:var(--ga);white-space:nowrap}
-.gtip{font-size:17px;font-weight:700;background:#fff;border:3px dashed var(--ga);border-radius:16px;padding:10px 14px;margin:10px 0;line-height:1.5}
+.gtip{font-size:17px;font-weight:700;background:transparent;border:3px dashed var(--ga);border-radius:16px;padding:10px 14px;margin:10px 0;line-height:1.5}
 .gdots{display:flex;gap:10px;justify-content:center;margin:12px 0}
-.gdots i{width:12px;height:12px;border-radius:50%;background:#ffd6ea}
+.gdots i{width:12px;height:12px;border-radius:50%;background:#5b3a8f}
 .gdots i.on{background:var(--ga);transform:scale(1.3)}
 .gnav{display:flex;gap:12px;justify-content:center}
 #s-shoot{transition:background .4s}
 #s-shoot.lit{background:#fff}
-#s-shoot.lit .vwrap{box-shadow:0 0 0 5px #ff9ac4,0 0 0 14px #fff,0 8px 24px rgba(0,0,0,.18)}
+#s-shoot.lit .vwrap{box-shadow:0 0 0 5px #ff9a2e,0 0 0 14px #fff,0 8px 24px rgba(0,0,0,.18)}
+#s-shoot.lit p{color:var(--ink)!important}
 </style>
 </head>
 <body>
+<svg id="scene" viewBox="0 0 1200 300" preserveAspectRatio="xMidYMax slice" aria-hidden="true">
+  <path fill="#1b0b33" d="M0 300V256Q150 230 300 250T600 244T900 240T1200 250V300Z"/>
+  <g fill="#1b0b33">
+    <path d="M70 256V176L100 154V114L116 92L132 114V154L165 134V92L186 60L207 92V140L250 166V256Z"/>
+    <rect x="60" y="150" width="8" height="106"/>
+    <g transform="translate(420 0)"><rect x="40" y="206" width="12" height="50"/><rect x="26" y="220" width="40" height="11"/></g>
+    <g transform="translate(560 6)"><rect x="40" y="206" width="12" height="44"/><rect x="28" y="218" width="36" height="10"/></g>
+    <path d="M700 252V214Q700 196 718 196T736 214V252Z"/>
+    <g transform="translate(790 0)"><rect x="40" y="204" width="12" height="52"/><rect x="26" y="218" width="40" height="11"/></g>
+    <path d="M930 250V210Q930 190 950 190T970 210V250Z"/>
+    <g transform="translate(1040 4)"><rect x="40" y="204" width="12" height="48"/><rect x="26" y="218" width="40" height="11"/></g>
+    <path d="M1150 252V222Q1150 208 1163 208T1176 222V252Z"/>
+  </g>
+  <g fill="#ffcf4a">
+    <rect x="108" y="124" width="16" height="22" rx="8"/><rect x="170" y="104" width="14" height="20" rx="7"/>
+    <rect x="136" y="204" width="16" height="22" rx="3"/><rect x="190" y="186" width="14" height="18" rx="3"/>
+    <path d="M110 256V232Q110 218 123 218T136 232V256Z"/>
+  </g>
+</svg>
 <div id="bg"></div>
 
 <div id="guide">
@@ -99,14 +123,14 @@ video{width:100%;height:100%;object-fit:cover;transform:scaleX(-1)}
 <div class="screen active" id="s-start">
   <div class="inner">
     <h1 class="logo">Purikura</h1>
-    <p class="sub" id="eventTitle">💖 学校祭プリクラ 💖</p>
+    <p class="sub" id="eventTitle">🎃 学校祭プリクラ 🎃</p>
     <div class="badges">
       <span class="badge">📸 4枚撮影</span>
-      <span class="badge">✨ 盛れる加工</span>
+      <span class="badge">🦇 盛れる加工</span>
       <span class="badge">📱 QRで保存</span>
     </div>
     <p id="startMsg" style="font-weight:700;color:var(--deep)">画面をタップしてスタート！</p>
-    <button class="btn big" id="btnStart">スタート ✨</button>
+    <button class="btn big" id="btnStart">スタート 🎃</button>
     <button class="btn sub2" id="btnGuide">📖 使い方</button>
   </div>
 </div>
@@ -127,13 +151,13 @@ video{width:100%;height:100%;object-fit:cover;transform:scaleX(-1)}
     <div class="row">
       <button class="btn sub2" id="btnBack">もどる</button>
       <button class="btn sub2" id="btnLight">💡 ライト：自動</button>
-      <button class="btn" id="btnShoot">撮影開始 💕</button>
+      <button class="btn" id="btnShoot">撮影開始 🎃</button>
     </div>
   </div>
 </div>
 
 <div class="screen" id="s-working">
-  <div class="inner"><h2>加工中… ✨</h2><p id="workMsg">そのままちょっと待ってね</p></div>
+  <div class="inner"><h2>加工中… 👻</h2><p id="workMsg">そのままちょっと待ってね</p></div>
 </div>
 
 <div class="screen" id="s-result">
@@ -141,7 +165,7 @@ video{width:100%;height:100%;object-fit:cover;transform:scaleX(-1)}
     <div class="row">
       <img id="resultImg" alt="完成">
       <div style="display:flex;flex-direction:column;align-items:center;gap:12px">
-        <h2>できたよ！ 💖</h2>
+        <h2>できたよ！ 🎃</h2>
         <div id="qr"></div>
         <p id="resultMsg">アップロード中…</p>
         <p style="font-size:15px">読み取ったあと、画像を長押し →<br>「“写真”に追加」で保存できます</p>
@@ -186,13 +210,16 @@ const PRESETS = {
   cool:{name:'かっこいい',sub:'キリッと',filter:'cool',beauty:'normal',face:'mid',taste:'cool'}
 };
 const FRAMES = {
+  pumpkin:{name:'パンプキン',bg:'#ff9a3c',bg2:'#e8631a',accent:'#3b1670',dots:true,deco:'pumpkin'},
+  night:{name:'ミッドナイト',bg:'#3a1a6e',bg2:'#1d0c3d',accent:'#ffb347',dots:true,deco:'bat',darkText:true},
+  witch:{name:'ウィッチ',bg:'#a56ee0',bg2:'#6b3fa0',accent:'#ffd23f',dots:true,deco:'hmix',darkText:true},
   pop:{name:'ポップピンク',bg:'#ffe1ee',bg2:'#ffc3dc',accent:'#ff5c9d',dots:true,deco:'heart'},
   dream:{name:'ゆめかわ',bg:'#f2e0ff',bg2:'#ffe0f1',accent:'#b07cff',dots:true,deco:'mix'},
   sky:{name:'スカイ',bg:'#dff0ff',bg2:'#bfdcff',accent:'#3b8cff',dots:true,deco:'star'},
   cool:{name:'ナイト',bg:'#1c2146',bg2:'#10132b',accent:'#bcd0ff',dots:true,deco:'star'},
   mono:{name:'シンプル',bg:'#ffffff',bg2:'#f2f2f2',accent:'#333333',dots:false,deco:null}
 };
-const defaultState = () => Object.assign({}, PRESETS.cute, {preset:'cute', frame:'pop'});
+const defaultState = () => Object.assign({}, PRESETS.cute, {preset:'cute', frame:'pumpkin'});
 let state = defaultState();
 
 /* ===== ヘルパー ===== */
@@ -207,7 +234,7 @@ function show(id){
 
 /* ===== 背景デコ（ふわふわ） ===== */
 (function(){
-  const em = ['✨','💖','⭐','🎀','💫','🌸','🫧','💕'];
+  const em = ['🎃','🦇','👻','🕸️','🍬','⭐','🌙','🕷️'];
   const bg = $('bg');
   for (let i = 0; i < 16; i++){
     const s = document.createElement('span');
@@ -220,14 +247,14 @@ function show(id){
   }
   document.addEventListener('pointerdown', e => {
     const s = document.createElement('span');
-    s.className = 'spark'; s.textContent = ['✨','💖','⭐','💫'][Math.floor(Math.random()*4)];
+    s.className = 'spark'; s.textContent = ['🎃','🦇','👻','🍬'][Math.floor(Math.random()*4)];
     s.style.left = e.clientX + 'px'; s.style.top = e.clientY + 'px';
     document.body.appendChild(s);
     setTimeout(() => s.remove(), 900);
   });
 })();
 function confetti(){
-  const em = ['💖','✨','⭐','🎀','💕','🌸'];
+  const em = ['🎃','🦇','👻','🍬','⭐','🌙'];
   for (let i = 0; i < 26; i++){
     const s = document.createElement('span');
     s.className = 'conf'; s.textContent = em[i % em.length];
@@ -263,15 +290,15 @@ async function startCamera(){
 
 /* ===== 使い方ガイド（ポップアップ3枚） ===== */
 const GUIDE = [
-  {emoji:'🌿', name:'ナチュラル', sub:'自然にきれい', color:'#3fae7a',
+  {emoji:'👻', name:'ナチュラル', sub:'自然にきれい', color:'#7ee0a8',
    desc:'素のままの雰囲気を大切に、肌をなめらかに整えます。加工しすぎたくない人向けです。',
    rows:[['フィルター','ナチュラル'],['美肌の強さ','弱め'],['目・輪郭の盛り','ちょっと']],
    tip:'💡 友だちと自然体で撮りたいときに！'},
-  {emoji:'🎀', name:'かわいい', sub:'盛れる♡', color:'#ff5c9d',
+  {emoji:'🎃', name:'かわいい', sub:'盛れる♡', color:'#ff9a2e',
    desc:'ピンクのやわらかい色で、肌ツヤと目をぱっちり盛ります。ほんのりチークも入ります。',
    rows:[['フィルター','ピンク系'],['美肌の強さ','普通'],['目・輪郭の盛り','しっかり']],
    tip:'💡 とにかく盛れたい！かわいく撮りたい人に！'},
-  {emoji:'😎', name:'かっこいい', sub:'キリッと', color:'#3b8cff',
+  {emoji:'🦇', name:'かっこいい', sub:'キリッと', color:'#b58cff',
    desc:'青みのクールな色で、くっきり引きしまった印象に。目は盛りすぎず、輪郭をすっきり見せます。',
    rows:[['フィルター','クール'],['美肌の強さ','普通'],['目・輪郭の盛り','しっかり（キリッと）']],
    tip:'💡 クールに決めたい人、かっこよく撮りたい人に！'}
@@ -405,7 +432,7 @@ function setManual(k, v){ state[k] = v; state.preset = null; renderSettings(); }
 function renderSettings(){
   const box = $('settingsBox'); box.innerHTML = '';
   const t = document.createElement('p');
-  t.innerHTML = '<b style="font-size:26px;color:#d6457f">🎀 好みを選んでね 🎀</b>'; box.appendChild(t);
+  t.innerHTML = '<b style="font-size:26px;color:#ffb455">🎃 好みを選んでね 🎃</b>'; box.appendChild(t);
   const gb = document.createElement('button'); gb.className = 'btn sub2'; gb.textContent = '📖 おすすめ加工の説明';
   gb.onclick = () => openGuide(0); box.appendChild(gb);
   box.appendChild(chipGroup('① おすすめ加工',
@@ -435,7 +462,7 @@ function renderSettings(){
   });
   g.appendChild(row); box.appendChild(g);
   const ok = document.createElement('button');
-  ok.className = 'btn'; ok.textContent = '決定 💕';
+  ok.className = 'btn'; ok.textContent = '決定 🎃';
   ok.onclick = () => { previewBase = FILTERS[state.filter].css + ' brightness(1.08)'; boost = 1; applyPreview(); show('s-shoot'); };
   box.appendChild(ok);
   const st = document.createElement('p'); st.id = 'faceStatus'; box.appendChild(st);
@@ -729,8 +756,40 @@ function rrect(x,a,b,w,h,r){
   x.arcTo(a+w,b,a+w,b+h,r); x.arcTo(a+w,b+h,a,b+h,r); x.arcTo(a,b+h,a,b,r); x.arcTo(a,b,a+w,b,r);
   x.closePath();
 }
+function pumpkin(x,f,cx,cy,s){
+  const keep = x.fillStyle, r = s*1.05;
+  [[-0.5,0.62,0.82],[0.5,0.62,0.82],[0,0.7,0.9]].forEach(([dx,rx,ry]) => {
+    x.beginPath(); x.ellipse(cx+dx*r,cy+r*0.05,rx*r,ry*r,0,0,Math.PI*2); x.fill();
+  });
+  x.fillRect(cx-r*0.12,cy-r*1.2,r*0.24,r*0.42);
+  x.fillStyle = f.bg;
+  x.beginPath(); x.moveTo(cx-r*0.5,cy-r*0.1); x.lineTo(cx-r*0.15,cy-r*0.1); x.lineTo(cx-r*0.32,cy-r*0.42); x.fill();
+  x.beginPath(); x.moveTo(cx+r*0.5,cy-r*0.1); x.lineTo(cx+r*0.15,cy-r*0.1); x.lineTo(cx+r*0.32,cy-r*0.42); x.fill();
+  x.beginPath(); x.moveTo(cx-r*0.5,cy+r*0.2); x.lineTo(cx-r*0.25,cy+r*0.5); x.lineTo(cx-r*0.08,cy+r*0.3);
+  x.lineTo(cx+r*0.08,cy+r*0.5); x.lineTo(cx+r*0.25,cy+r*0.3); x.lineTo(cx+r*0.5,cy+r*0.2);
+  x.lineTo(cx+r*0.3,cy+r*0.62); x.lineTo(cx-r*0.3,cy+r*0.62); x.fill();
+  x.fillStyle = keep;
+}
+function bat(x,cx,cy,s){
+  const r = s*0.9;
+  x.beginPath(); x.moveTo(cx,cy-r*0.3);
+  x.quadraticCurveTo(cx+r*0.35,cy-r*0.95,cx+r*1.5,cy-r*0.55);
+  x.quadraticCurveTo(cx+r*1.15,cy-r*0.15,cx+r*1.3,cy+r*0.55);
+  x.quadraticCurveTo(cx+r*0.85,cy+r*0.1,cx+r*0.55,cy+r*0.65);
+  x.lineTo(cx+r*0.25,cy+r*0.25); x.lineTo(cx,cy+r*0.45); x.lineTo(cx-r*0.25,cy+r*0.25);
+  x.lineTo(cx-r*0.55,cy+r*0.65);
+  x.quadraticCurveTo(cx-r*0.85,cy+r*0.1,cx-r*1.3,cy+r*0.55);
+  x.quadraticCurveTo(cx-r*1.15,cy-r*0.15,cx-r*1.5,cy-r*0.55);
+  x.quadraticCurveTo(cx-r*0.35,cy-r*0.95,cx,cy-r*0.3);
+  x.closePath(); x.fill();
+  x.beginPath(); x.moveTo(cx-r*0.22,cy-r*0.25); x.lineTo(cx-r*0.18,cy-r*0.7); x.lineTo(cx,cy-r*0.3); x.fill();
+  x.beginPath(); x.moveTo(cx+r*0.22,cy-r*0.25); x.lineTo(cx+r*0.18,cy-r*0.7); x.lineTo(cx,cy-r*0.3); x.fill();
+}
 function drawShape(x, f, n, cx, cy, s){
-  if (f.deco === 'heart') heart(x,cx,cy,s*0.9);
+  if (f.deco === 'pumpkin') pumpkin(x,f,cx,cy,s);
+  else if (f.deco === 'bat') bat(x,cx,cy,s);
+  else if (f.deco === 'hmix') (n % 2 ? pumpkin(x,f,cx,cy,s) : bat(x,cx,cy,s));
+  else if (f.deco === 'heart') heart(x,cx,cy,s*0.9);
   else if (f.deco === 'star') star(x,cx,cy,s*1.2);
   else if (f.deco === 'mix') (n % 2 ? heart(x,cx,cy,s*0.9) : star(x,cx,cy,s*1.2));
 }
@@ -780,7 +839,7 @@ function composeStrip(photos, f, S, dateText){
   }
   if (dateText){
     x.fillStyle = f.accent; rrect(x,170*S,1748*S,260*S,40*S,20*S); x.fill();
-    x.fillStyle = f.deco ? (f.bg === '#1c2146' ? '#10132b' : '#fff') : '#fff';
+    x.fillStyle = f.deco ? ((f.bg === '#1c2146' || f.darkText) ? '#10132b' : '#fff') : '#fff';
     x.font = 'bold ' + (24*S) + 'px ' + font;
     x.fillText(dateText, W/2, 1769*S);
   }
@@ -907,7 +966,7 @@ $('btnLight').onclick = () => {
 $('btnShoot').onclick = runShooting;
 $('btnRetry').onclick = doUpload;
 $('btnEnd').onclick = resetAll;
-$('eventTitle').textContent = '💖 ' + EVENT_TEXT + ' プリクラ 💖';
+$('eventTitle').textContent = '🎃 ' + EVENT_TEXT + ' プリクラ 🎃';
 setTimeout(initFace, 600);
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
