@@ -58,6 +58,24 @@ video{width:100%;height:100%;object-fit:cover;transform:scaleX(-1)}
 #qr img,#qr canvas{display:block}
 .err{color:#d12b2b}
 #faceStatus{font-size:14px;opacity:.75}
+#guide{position:fixed;inset:0;z-index:100;display:none;align-items:center;justify-content:center;background:rgba(58,42,51,.55);padding:16px}
+#guide.open{display:flex}
+.gcard{--ga:#ff5c9d;position:relative;width:min(94vw,560px);max-height:94vh;overflow-y:auto;background:#fff;border:5px dashed var(--ga);border-radius:28px;padding:26px 22px 20px;text-align:center;box-shadow:0 14px 40px rgba(0,0,0,.3);animation:gpop .3s ease-out}
+@keyframes gpop{from{transform:scale(.85);opacity:0}to{transform:scale(1);opacity:1}}
+.gx{position:absolute;top:8px;right:14px;border:none;background:none;font-size:32px;line-height:1;color:var(--deep)}
+.gcount{font-size:15px;font-weight:700;opacity:.6}
+.gemoji{font-size:58px;line-height:1.2}
+.gname{font-size:36px;font-weight:900;margin:2px 0;color:var(--ga)}
+.gsub{font-size:19px;font-weight:700;color:var(--deep)}
+.gdesc{font-size:19px;margin:12px 0;line-height:1.6}
+.grows{display:flex;flex-direction:column;gap:8px;margin:12px 0}
+.grow{display:flex;justify-content:space-between;align-items:center;gap:10px;background:#fff5fa;border-radius:14px;padding:10px 16px;font-size:18px;font-weight:700;text-align:left}
+.grow span{color:var(--ga);white-space:nowrap}
+.gtip{font-size:17px;font-weight:700;background:#fff;border:3px dashed var(--ga);border-radius:16px;padding:10px 14px;margin:10px 0;line-height:1.5}
+.gdots{display:flex;gap:10px;justify-content:center;margin:12px 0}
+.gdots i{width:12px;height:12px;border-radius:50%;background:#ffd6ea}
+.gdots i.on{background:var(--ga);transform:scale(1.3)}
+.gnav{display:flex;gap:12px;justify-content:center}
 #s-shoot{transition:background .4s}
 #s-shoot.lit{background:#fff}
 #s-shoot.lit .vwrap{box-shadow:0 0 0 5px #ff9ac4,0 0 0 14px #fff,0 8px 24px rgba(0,0,0,.18)}
@@ -65,6 +83,18 @@ video{width:100%;height:100%;object-fit:cover;transform:scaleX(-1)}
 </head>
 <body>
 <div id="bg"></div>
+
+<div id="guide">
+  <div class="gcard" id="gcard">
+    <button class="gx" id="gClose" aria-label="とじる">✕</button>
+    <div id="gBody"></div>
+    <div class="gdots" id="gDots"></div>
+    <div class="gnav">
+      <button class="btn sub2" id="gPrev">◀ もどる</button>
+      <button class="btn sub2" id="gNext">つぎへ ▶</button>
+    </div>
+  </div>
+</div>
 
 <div class="screen active" id="s-start">
   <div class="inner">
@@ -77,6 +107,7 @@ video{width:100%;height:100%;object-fit:cover;transform:scaleX(-1)}
     </div>
     <p id="startMsg" style="font-weight:700;color:var(--deep)">画面をタップしてスタート！</p>
     <button class="btn big" id="btnStart">スタート ✨</button>
+    <button class="btn sub2" id="btnGuide">📖 使い方</button>
   </div>
 </div>
 
@@ -230,6 +261,56 @@ async function startCamera(){
   await video.play().catch(()=>{});
 }
 
+/* ===== 使い方ガイド（ポップアップ3枚） ===== */
+const GUIDE = [
+  {emoji:'🌿', name:'ナチュラル', sub:'自然にきれい', color:'#3fae7a',
+   desc:'素のままの雰囲気を大切に、肌をなめらかに整えます。加工しすぎたくない人向けです。',
+   rows:[['フィルター','ナチュラル'],['美肌の強さ','弱め'],['目・輪郭の盛り','ちょっと']],
+   tip:'💡 友だちと自然体で撮りたいときに！'},
+  {emoji:'🎀', name:'かわいい', sub:'盛れる♡', color:'#ff5c9d',
+   desc:'ピンクのやわらかい色で、肌ツヤと目をぱっちり盛ります。ほんのりチークも入ります。',
+   rows:[['フィルター','ピンク系'],['美肌の強さ','普通'],['目・輪郭の盛り','しっかり']],
+   tip:'💡 とにかく盛れたい！かわいく撮りたい人に！'},
+  {emoji:'😎', name:'かっこいい', sub:'キリッと', color:'#3b8cff',
+   desc:'青みのクールな色で、くっきり引きしまった印象に。目は盛りすぎず、輪郭をすっきり見せます。',
+   rows:[['フィルター','クール'],['美肌の強さ','普通'],['目・輪郭の盛り','しっかり（キリッと）']],
+   tip:'💡 クールに決めたい人、かっこよく撮りたい人に！'}
+];
+let gIdx = 0;
+function renderGuide(){
+  const g = GUIDE[gIdx];
+  $('gcard').style.setProperty('--ga', g.color);
+  $('gBody').innerHTML =
+    '<div class="gcount">' + (gIdx+1) + ' / ' + GUIDE.length + '</div>' +
+    '<div class="gemoji">' + g.emoji + '</div>' +
+    '<div class="gname">' + g.name + '</div>' +
+    '<div class="gsub">' + g.sub + '</div>' +
+    '<div class="gdesc">' + g.desc + '</div>' +
+    '<div class="grows">' + g.rows.map(r => '<div class="grow"><span>' + r[0] + '</span>' + r[1] + '</div>').join('') + '</div>' +
+    '<div class="gtip">' + g.tip + '</div>';
+  $('gDots').innerHTML = GUIDE.map((_, i) => '<i class="' + (i === gIdx ? 'on' : '') + '"></i>').join('');
+  $('gPrev').style.visibility = gIdx === 0 ? 'hidden' : 'visible';
+  $('gNext').textContent = gIdx === GUIDE.length-1 ? 'とじる ✓' : 'つぎへ ▶';
+}
+function openGuide(i){ gIdx = i || 0; renderGuide(); $('guide').classList.add('open'); }
+function closeGuide(){ $('guide').classList.remove('open'); }
+$('btnGuide').onclick = () => openGuide(0);
+$('gClose').onclick = closeGuide;
+$('gPrev').onclick = () => { if (gIdx > 0){ gIdx--; renderGuide(); } };
+$('gNext').onclick = () => { if (gIdx < GUIDE.length-1){ gIdx++; renderGuide(); } else closeGuide(); };
+$('guide').onclick = e => { if (e.target === $('guide')) closeGuide(); };
+(function(){
+  let sx = null;
+  const c = $('gcard');
+  c.addEventListener('touchstart', e => { sx = e.touches[0].clientX; }, {passive:true});
+  c.addEventListener('touchend', e => {
+    if (sx === null) return;
+    const dx = e.changedTouches[0].clientX - sx; sx = null;
+    if (dx < -50 && gIdx < GUIDE.length-1){ gIdx++; renderGuide(); }
+    else if (dx > 50 && gIdx > 0){ gIdx--; renderGuide(); }
+  }, {passive:true});
+})();
+
 /* ===== 暗い場所対応：画面ライト・プレビュー補正・撮影後の自動露出 ===== */
 let lightMode = 'auto', lightOn = false, boost = 1, previewBase = '', monTimer = null;
 const LIGHT_LABEL = {auto:'💡 ライト：自動', on:'💡 ライト：つよい', off:'💡 ライト：なし'};
@@ -325,6 +406,8 @@ function renderSettings(){
   const box = $('settingsBox'); box.innerHTML = '';
   const t = document.createElement('p');
   t.innerHTML = '<b style="font-size:26px;color:#d6457f">🎀 好みを選んでね 🎀</b>'; box.appendChild(t);
+  const gb = document.createElement('button'); gb.className = 'btn sub2'; gb.textContent = '📖 おすすめ加工の説明';
+  gb.onclick = () => openGuide(0); box.appendChild(gb);
   box.appendChild(chipGroup('① おすすめ加工',
     Object.entries(PRESETS).map(([k,v]) => [k,v.name,v.sub]), 'preset', k => {
       const p = PRESETS[k]; state.preset = k;
