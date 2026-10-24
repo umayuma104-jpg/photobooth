@@ -150,6 +150,7 @@ video{width:100%;height:100%;object-fit:cover;transform:scaleX(-1)}
     <p style="font-weight:700;color:var(--deep)">撮影開始ボタンを押すと4枚撮影されます 📸</p>
     <div class="row">
       <button class="btn sub2" id="btnBack">もどる</button>
+      <button class="btn sub2" id="btnZoom">🔍 ズーム：1.0倍</button>
       <button class="btn sub2" id="btnLight">💡 ライト：自動</button>
       <button class="btn" id="btnShoot">撮影開始 🎃</button>
     </div>
@@ -338,6 +339,13 @@ $('guide').onclick = e => { if (e.target === $('guide')) closeGuide(); };
 })();
 
 /* ===== 暗い場所対応：画面ライト・プレビュー補正・撮影後の自動露出 ===== */
+const ZOOMS = [1, 1.3, 1.6, 2];
+let zoomIdx = 0, zoom = 1;
+function zoomLabel(){ return '🔍 ズーム：' + zoom.toFixed(1) + '倍'; }
+function applyZoom(){
+  video.style.transform = 'scale(' + (-zoom) + ',' + zoom + ')';
+  $('btnZoom').textContent = zoomLabel();
+}
 let lightMode = 'auto', lightOn = false, boost = 1, previewBase = '', monTimer = null;
 const LIGHT_LABEL = {auto:'💡 ライト：自動', on:'💡 ライト：つよい', off:'💡 ライト：なし'};
 const meter = document.createElement('canvas'); meter.width = 64; meter.height = 48;
@@ -357,6 +365,7 @@ function tickLight(){
   const vw = video.videoWidth, vh = video.videoHeight;
   let sw = vw, sh = vw*3/4;
   if (sh > vh){ sh = vh; sw = vh*4/3; }
+  sw /= zoom; sh /= zoom;
   const m = lumaOf(video, (vw-sw)/2, (vh-sh)/2, sw, sh);
   if (lightMode === 'auto'){ if (m < 90) lightOn = true; else if (m > 170) lightOn = false; }
   else lightOn = (lightMode === 'on');
@@ -446,7 +455,7 @@ function renderSettings(){
   g.appendChild(row); box.appendChild(g);
   const ok = document.createElement('button');
   ok.className = 'btn'; ok.textContent = '決定 🎃';
-  ok.onclick = () => { previewBase = FILTERS[state.filter].css + ' brightness(1.08)'; boost = 1; applyPreview(); show('s-shoot'); };
+  ok.onclick = () => { previewBase = FILTERS[state.filter].css + ' brightness(1.08)'; boost = 1; applyPreview(); applyZoom(); show('s-shoot'); };
   box.appendChild(ok);
   const st = document.createElement('p'); st.id = 'faceStatus'; box.appendChild(st);
   updateFaceStatus();
@@ -833,6 +842,7 @@ function capture(){
   const vw = video.videoWidth, vh = video.videoHeight;
   let sw = vw, sh = vw*3/4;
   if (sh > vh){ sh = vh; sw = vh*4/3; }
+  sw /= zoom; sh /= zoom;
   const sx = (vw-sw)/2, sy = (vh-sh)/2;
   const c = document.createElement('canvas'); c.width = 1040; c.height = 780;
   const x = c.getContext('2d');
@@ -848,7 +858,7 @@ function showCount(t){
   const e = $('cd'); e.textContent = t; e.classList.remove('pop'); void e.offsetWidth; e.classList.add('pop');
 }
 async function runShooting(){
-  $('btnShoot').disabled = true; $('btnBack').disabled = true; $('btnLight').disabled = true;
+  $('btnShoot').disabled = true; $('btnBack').disabled = true; $('btnLight').disabled = true; $('btnZoom').disabled = true;
   const raws = [];
   for (let i = 0; i < SHOT_COUNT; i++){
     $('counter').textContent = (i+1) + ' / ' + SHOT_COUNT;
@@ -858,7 +868,7 @@ async function runShooting(){
     await sleep(900);
   }
   $('counter').textContent = '';
-  $('btnShoot').disabled = false; $('btnBack').disabled = false; $('btnLight').disabled = false;
+  $('btnShoot').disabled = false; $('btnBack').disabled = false; $('btnLight').disabled = false; $('btnZoom').disabled = false;
   show('s-working'); await sleep(150);
   const done = [];
   for (let i = 0; i < raws.length; i++){
@@ -923,7 +933,7 @@ function drawQR(url){
 function resetAll(){
   clearTimeout(resetTimer);
   state = defaultState();
-  lightMode = 'auto'; $('btnLight').textContent = LIGHT_LABEL.auto;
+  lightMode = 'auto'; $('btnLight').textContent = LIGHT_LABEL.auto; zoomIdx = 0; zoom = 1; applyZoom();
   $('startMsg').textContent = '画面をタップしてスタート！';
   show('s-start');
 }
@@ -940,6 +950,9 @@ $('btnStart').onclick = async () => {
   }
 };
 $('btnBack').onclick = () => show('s-settings');
+$('btnZoom').onclick = () => {
+  zoomIdx = (zoomIdx + 1) % ZOOMS.length; zoom = ZOOMS[zoomIdx]; applyZoom(); tickLight();
+};
 $('btnLight').onclick = () => {
   lightMode = {auto:'on', on:'off', off:'auto'}[lightMode];
   $('btnLight').textContent = LIGHT_LABEL[lightMode];
