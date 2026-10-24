@@ -273,7 +273,7 @@ let stream = null;
 async function startCamera(){
   if (stream) return;
   stream = await navigator.mediaDevices.getUserMedia({
-    video:{facingMode:'user',width:{ideal:1280},height:{ideal:960},frameRate:{ideal:24,max:30}},audio:false
+    video:{facingMode:'user',width:{ideal:1280},height:{ideal:960}},audio:false
   });
   try {
     const tr = stream.getVideoTracks()[0];
@@ -281,7 +281,6 @@ async function startCamera(){
     const adv = {};
     if (caps.exposureMode && caps.exposureMode.includes('continuous')) adv.exposureMode = 'continuous';
     if (caps.whiteBalanceMode && caps.whiteBalanceMode.includes('continuous')) adv.whiteBalanceMode = 'continuous';
-    if (caps.exposureCompensation) adv.exposureCompensation = caps.exposureCompensation.min + (caps.exposureCompensation.max - caps.exposureCompensation.min) * 0.75;
     if (Object.keys(adv).length) await tr.applyConstraints({advanced:[adv]});
   } catch (e){ console.warn('カメラ詳細設定は未対応', e); }
   video.srcObject = stream;
@@ -362,26 +361,10 @@ function tickLight(){
   if (lightMode === 'auto'){ if (m < 90) lightOn = true; else if (m > 170) lightOn = false; }
   else lightOn = (lightMode === 'on');
   $('s-shoot').classList.toggle('lit', lightOn);
-  const want = Math.min(1.9, Math.max(1, 125/Math.max(m,20)));
-  boost += (want - boost)*0.4;
   applyPreview();
 }
 function startLightMonitor(){ stopLightMonitor(); tickLight(); monTimer = setInterval(tickLight, 400); }
 function stopLightMonitor(){ if (monTimer){ clearInterval(monTimer); monTimer = null; } }
-/* 暗い写真を持ち上げる（ガンマ補正）＋持ち上げで目立つノイズを軽くなじませる */
-function autoExposure(c){
-  const TARGET = 120, mean = lumaOf(c, 0, 0, c.width, c.height);
-  const g = Math.max(0.42, Math.log(TARGET/255)/Math.log(Math.max(mean,8)/255));
-  if (!(mean < TARGET) || g > 0.95) return;
-  const x = c.getContext('2d'), im = x.getImageData(0,0,c.width,c.height), d = im.data;
-  const lut = new Uint8ClampedArray(256);
-  for (let i = 0; i < 256; i++) lut[i] = 255*Math.pow(i/255, g);
-  for (let i = 0; i < d.length; i += 4){ d[i] = lut[d[i]]; d[i+1] = lut[d[i+1]]; d[i+2] = lut[d[i+2]]; }
-  x.putImageData(im,0,0);
-  const dark = Math.min(1, (TARGET-mean)/80);
-  const o = softCanvas(c, 2);
-  x.globalAlpha = 0.3*dark; x.drawImage(o,0,0); x.globalAlpha = 1;
-}
 
 /* ===== 顔認識（MediaPipe）。失敗しても通常加工で続行 ===== */
 let faceLM = null, faceState = 'idle';
@@ -710,7 +693,6 @@ function warpFaces(c, faces){
 async function processPhoto(raw){
   const c = document.createElement('canvas'); c.width = raw.width; c.height = raw.height;
   const x = c.getContext('2d'); x.drawImage(raw,0,0);
-  autoExposure(c);
   const bt = BEAUTY[state.beauty];
   const faces = detectFaces(c);
   const cute = state.taste === 'cute';
